@@ -6,13 +6,14 @@ class cWidget(QWidget):
     MOVE_BY_PIXEL = 2
     MOVE_BY_FRACTION = 3
     MOVE_BY_SELF_FRACTION = 4
-    def __init__(self, parent=None, bg_color="#FFFFFF", radius=0, border_color=None, border_width=0,
+    def __init__(self, bg_color="#FFFFFF", radius=0, border_color=None, border_width=0,
                  pos=(0,0), size=(0,0), stretch=False, pos_mode=MOVE_BY_FRACTION, clip_to_parent=True, self_dimensions=0):
-        super().__init__(parent)
+        super().__init__()
         self.cpos = pos
+        self.pos_mode = pos_mode
         self.csize = size
         self.stretch = stretch
-        self.clip_to_parent = clip_to_parent  # allow going outside parent
+        self.clip_to_parent = clip_to_parent
         self.bg_color = QColor(bg_color)
         self.radius = radius
         self.border_color = QColor(border_color) if border_color else None
@@ -23,8 +24,11 @@ class cWidget(QWidget):
         self.parent_w = 0
         self.parent_h = 0
 
-    def adopt(self, parent):
-        pass
+
+    def adopt(self, parent: QWidget):
+        if parent:
+            self.setParent(parent)
+            self.load(parent.width(), parent.height())
 
     def paintEvent(self, event):
         radius = int(self.radius * 0.001 * self.m)
@@ -81,10 +85,16 @@ class cWidget(QWidget):
             width = min(width, w - x)
             height = min(height, h - y)
 
-        if self.self_dimensions == 1 or self.self_dimensions == 3:
-            x = int(width * self.cpos[0])
-        if self.self_dimensions >= 2:
-            y = int(height * self.cpos[1])
+        x = int(width * self.cpos[0])
+        y = int(height * self.cpos[1])
+        if self.pos_mode == self.MOVE_BY_PIXEL:
+            x = int(self.cpos[0])
+            y = int(self.cpos[1])
+        elif self.pos_mode == self.MOVE_BY_SELF_FRACTION:
+            if self.self_dimensions == 1 or self.self_dimensions == 3:
+                x = int(width * self.cpos[0])
+            if self.self_dimensions >= 2:
+                y = int(height * self.cpos[1])
 
         self.setGeometry(x, y, width, height)
         self.update()
@@ -93,10 +103,10 @@ class cLabel(cWidget):
     MODE_FRACTIONAL_SIZE = 0
     MODE_FIXED_TEXT_SIZE = 1
 
-    def __init__(self, text="", parent=None, bg_color="#FFFFFF", radius=0, border_color=None, border_width=0,
+    def __init__(self, text="", bg_color="#FFFFFF", radius=0, border_color=None, border_width=0,
                  pos=(0,0), size=(0,0), stretch=False, pos_mode=cWidget.MOVE_BY_FRACTION, text_color="#000000",
                  text_size=None, clip_to_parent= False, self_dimensions=0, mode=MODE_FIXED_TEXT_SIZE):
-        super().__init__(parent, bg_color, radius, border_color, border_width, pos, size, stretch, pos_mode=pos_mode, clip_to_parent=clip_to_parent, self_dimensions=self_dimensions)
+        super().__init__(bg_color, radius, border_color, border_width, pos, size, stretch, pos_mode=pos_mode, clip_to_parent=clip_to_parent, self_dimensions=self_dimensions)
         self.text = text
         self.text_color = QColor(text_color)
         self.font = QFont()
@@ -150,12 +160,12 @@ class cLabel(cWidget):
 class cButton(cLabel):
     clicked = Signal()
 
-    def __init__(self, text="", parent=None, bg_color="#FFFFFF", radius=5,
+    def __init__(self, text="", bg_color="#FFFFFF", radius=5,
                  border_color=None, border_width=0, pos=(0,0), size=(0,0), stretch=False,
                  pos_mode=cWidget.MOVE_BY_FRACTION,
                  text_color="#000000", hover_color=None, pressed_color=None,
                  text_size=None, clip_to_parent=False, self_dimensions=0, mode=cLabel.MODE_FIXED_TEXT_SIZE):
-        super().__init__(text=text, parent=parent, bg_color=bg_color, radius=radius,
+        super().__init__(text=text, bg_color=bg_color, radius=radius,
                          border_color=border_color, border_width=border_width,
                          pos=pos, size=size, stretch=stretch, pos_mode=pos_mode,
                          text_color=text_color, text_size=text_size, clip_to_parent=clip_to_parent, self_dimensions=self_dimensions, mode=mode)
@@ -195,7 +205,7 @@ class cButton(cLabel):
         super().mouseReleaseEvent(event)
 
 class cPopUpButton(cButton):
-    def __init__(self, text="", parent=None, bg_color="#FFFFFF", radius=0,
+    def __init__(self, text="", bg_color="#FFFFFF", radius=0,
                  border_color=None, border_width=0, pos=(0,0), size=(0,0), stretch=False, pos_mode=cWidget.MOVE_BY_FRACTION,
                  text_color="#000000", hover_color=None, pressed_color=None,
                  text_size=None, self_dimensions=0, clip_to_parent=True, mode=cButton.MODE_FIXED_TEXT_SIZE,
@@ -204,7 +214,7 @@ class cPopUpButton(cButton):
         activation_area: (x, y, width, height) in fractional parent coordinates
         pop_offset: fraction of parent size to move when popped
         """
-        super().__init__(text=text, parent=parent, bg_color=bg_color, radius=radius,
+        super().__init__(text=text, bg_color=bg_color, radius=radius,
                          border_color=border_color, border_width=border_width,
                          pos=pos, size=size, stretch=stretch, 
                          text_color=text_color, hover_color=hover_color,
@@ -217,9 +227,12 @@ class cPopUpButton(cButton):
 
         self.activation_area = activation_area 
 
+    def adopt(self, parent: QWidget):
         if parent:
+            self.setParent(parent)
+            self.load(parent.width(), parent.height())
             parent.setMouseTracking(True)
-            parent.installEventFilter(self) 
+            parent.installEventFilter(self)
 
     def eventFilter(self, watched, event):
         if event.type() == event.Type.MouseMove and self.activation_area and self.parentWidget() == watched:
@@ -258,9 +271,9 @@ class cPopUpButton(cButton):
                 self.load(self.parentWidget().width(), self.parentWidget().height())
 
 class ccontainerWidget(cWidget):
-    def __init__(self, parent=None, bg_color="#FFFFFF", radius=0, border_color=None, border_width=0,
+    def __init__(self, bg_color="#FFFFFF", radius=0, border_color=None, border_width=0,
                  pos=(0,0), size=(0,0), stretch=False, pos_mode=cWidget.MOVE_BY_FRACTION, clip_to_parent=True, self_dimensions=0):
-        super().__init__(parent, bg_color, radius, border_color, border_width, pos, size, stretch, pos_mode=pos_mode ,clip_to_parent=clip_to_parent, self_dimensions=self_dimensions)
+        super().__init__(bg_color, radius, border_color, border_width, pos, size, stretch, pos_mode=pos_mode ,clip_to_parent=clip_to_parent, self_dimensions=self_dimensions)
         self.widgets: list[cWidget] = []
         self.w = 0
         self.h = 0
@@ -286,15 +299,15 @@ class cDrawer(cWidget):
     DOWN_TO_UP = 1
     LEFT_TO_RIGHT = 2
     RIGHT_TO_LEFT = 3
-    def __init__(self, parent=None, bg_color="#FFFFFF", radius=0, border_color=None, border_width=0,
+    def __init__(self, bg_color="#FFFFFF", radius=0, border_color=None, border_width=0,
                  pos=(0,0), size=(0,0), stretch=False, pos_mode=cWidget.MOVE_BY_FRACTION, clip_to_parent=True, self_dimensions=0):
-        super().__init__(parent, bg_color, radius, border_color, border_width, pos, size, stretch, pos_mode=pos_mode ,clip_to_parent=clip_to_parent, self_dimensions=self_dimensions)
-        self.widgets = []
+        super().__init__(bg_color, radius, border_color, border_width, pos, size, stretch, pos_mode=pos_mode ,clip_to_parent=clip_to_parent, self_dimensions=self_dimensions)
+        self.widgets: list[cWidget] = []
         self.w = 0
         self.h = 0
         self.setMouseTracking(True)
 
-    def add_widget(self, widget):
+    def add_widget(self, widget: cWidget):
         self.widgets.append(widget)
         widget.setParent(self)
         self.load_widgets()

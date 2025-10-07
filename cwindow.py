@@ -1,4 +1,5 @@
 from PySide6.QtWidgets import QMainWindow
+from cwidgets import cWidget
 
 class Window(QMainWindow):
     def __init__(self, name, size=(800, 600)):
@@ -9,11 +10,11 @@ class Window(QMainWindow):
         self.cWidgets = []
         self.setStyleSheet("background-color: #000000;")
 
-    def add_widgets(self, cWidget):
+    def add_widget(self, cWidget: cWidget):
         self.cWidgets.append(cWidget)
-        self.load_widget(cWidget)
+        cWidget.adopt(self)
 
-    def load_widget(self, cWidget):
+    def load_widget(self, cWidget: cWidget):
         cWidget.load(self.w, self.h)
 
     def load_widgets(self):

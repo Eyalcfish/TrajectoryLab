@@ -22,7 +22,6 @@ class MainWindow(Window):
         # Activation area is a rectangle in fractional coordinates (x, y, width, height)
         engines_button = cPopUpButton(
             "Engines",
-            parent=self,
             pos=(-0.7,0.15),
             text_size=15,
             activation_area=(0.3,1),
@@ -36,7 +35,6 @@ class MainWindow(Window):
 
         engines_results_button = cPopUpButton(
             "Engine Results",
-            parent=self,
             pos=(-0.83,0.3),
             text_size=15,
             activation_area=(0.17,1),
@@ -50,7 +48,6 @@ class MainWindow(Window):
 
         poly_functions_button = cPopUpButton(
             "Poly Functions",
-            parent=self,
             pos=(-0.83,0.45),
             text_size=15,
             activation_area=(0.17,1),
@@ -70,7 +67,6 @@ class MainWindow(Window):
             border_color="#96311f",
             border_width=20,
             clip_to_parent=True,
-            parent=self
         )
 
         drawer = cDrawer(
@@ -79,14 +75,12 @@ class MainWindow(Window):
             stretch=True,
             bg_color="#18beca",
             radius=10,
-            parent=self
         )
 
         drawer.lower()
 
         cbutton = cButton(
             "Click Me",
-            parent=drawer,
             pos=(0,0),
             stretch=True,
             bg_color="#27ae60",
@@ -100,7 +94,6 @@ class MainWindow(Window):
 
         cbutton2 = cButton(
             "123123 Me2",
-            parent=drawer,
             pos=(0.3,0),
             stretch=True,
             bg_color="#27ae60",
@@ -112,14 +105,14 @@ class MainWindow(Window):
             mode=cButton.MODE_FIXED_TEXT_SIZE
         )
 
-        self.add_widgets(drawer)
+        self.add_widget(drawer)
         drawer.add_widget(cbutton)
         drawer.add_widget(cbutton2)
         cbutton.hide()
         # self.add_widgets(top_bar)
-        self.add_widgets(engines_button)
-        self.add_widgets(engines_results_button)
-        self.add_widgets(poly_functions_button)
+        self.add_widget(engines_button)
+        self.add_widget(engines_results_button)
+        self.add_widget(poly_functions_button)
 
 if __name__ == "__main__":
     app = QApplication([])
