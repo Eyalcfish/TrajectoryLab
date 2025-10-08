@@ -2,6 +2,8 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QF
 from PySide6.QtGui import QPainter, QColor, QBrush, QPen, QFont, QFontMetrics
 from PySide6.QtCore import Qt, Signal, QRect
 
+
+
 class cWidget(QWidget):
     MOVE_BY_PIXEL = 2
     MOVE_BY_FRACTION = 3
@@ -28,6 +30,8 @@ class cWidget(QWidget):
     def adopt(self, parent: QWidget):
         if parent:
             self.setParent(parent)
+            self.parent_w = parent.width()
+            self.parent_h = parent.height()
             self.load(parent.width(), parent.height())
 
     def paintEvent(self, event):
@@ -96,8 +100,37 @@ class cWidget(QWidget):
             if self.self_dimensions >= 2:
                 y = int(height * self.cpos[1])
 
+        self.w = width
+        self.h = height
+
         self.setGeometry(x, y, width, height)
         self.update()
+
+
+class Window(QMainWindow):
+    def __init__(self, name, size=(800, 600)):
+        super().__init__()
+        self.setWindowTitle(name)
+        self.resize(*size)
+        self.w, self.h = self.width(), self.height()
+        self.cWidgets = []
+        self.setStyleSheet("background-color: #000000;")
+
+    def add_widget(self, widget: cWidget):
+        self.cWidgets.append(widget)
+        widget.adopt(self)
+
+    def load_widget(self, widget: cWidget):
+        widget.load(self.w, self.h)
+
+    def load_widgets(self):
+        for widget in self.cWidgets:
+            self.load_widget(widget)
+
+    def resizeEvent(self, event):
+        self.w, self.h = self.width(), self.height()
+        self.load_widgets()
+        super().resizeEvent(event)
 
 class cLabel(cWidget):
     MODE_FRACTIONAL_SIZE = 0
@@ -112,7 +145,7 @@ class cLabel(cWidget):
         self.font = QFont()
         self.alignment = Qt.AlignCenter
         self.mode = mode
-        self.text_size = text_size
+        self.text_size = text_size if text_size < 1 or text_size is None else 12
         self.m = 0
 
     def load(self, parent_w, parent_h):
@@ -230,6 +263,8 @@ class cPopUpButton(cButton):
     def adopt(self, parent: QWidget):
         if parent:
             self.setParent(parent)
+            self.parent_w = parent.width()
+            self.parent_h = parent.height()
             self.load(parent.width(), parent.height())
             parent.setMouseTracking(True)
             parent.installEventFilter(self)
@@ -277,54 +312,38 @@ class ccontainerWidget(cWidget):
         self.widgets: list[cWidget] = []
         self.w = 0
         self.h = 0
-        self.setMouseTracking(True)
+
+    def adopt(self, parent: QWidget):
+        if parent:
+            self.setParent(parent)
+            self.parent_w = parent.width()
+            self.parent_h = parent.height()
+            self.load(self.parent_w, self.parent_h)
+            self.w, self.h = self.width(), self.height()
+            parent.setMouseTracking(True)
 
     def add_widget(self, widget: cWidget):
         self.widgets.append(widget)
-        widget.setParent(self)
+        self.load(self.parent_w, self.parent_h)
+        widget.adopt(self)
         self.load_widgets()
 
     def load_widgets(self):
-        self.w, self.h = self.width(), self.height()
         for widget in self.widgets:
             widget.load(self.w, self.h)
 
     def resizeEvent(self, event):
-        self.w, self.h = self.width(), self.height()
+        self.load(self.parent_w, self.parent_h)
         self.load_widgets()
         super().resizeEvent(event)
 
-class cDrawer(cWidget):
-    UP_TO_DOWN = 0
-    DOWN_TO_UP = 1
-    LEFT_TO_RIGHT = 2
-    RIGHT_TO_LEFT = 3
+class cDrawer(ccontainerWidget):
     def __init__(self, bg_color="#FFFFFF", radius=0, border_color=None, border_width=0,
                  pos=(0,0), size=(0,0), stretch=False, pos_mode=cWidget.MOVE_BY_FRACTION, clip_to_parent=True, self_dimensions=0):
         super().__init__(bg_color, radius, border_color, border_width, pos, size, stretch, pos_mode=pos_mode ,clip_to_parent=clip_to_parent, self_dimensions=self_dimensions)
-        self.widgets: list[cWidget] = []
-        self.w = 0
-        self.h = 0
-        self.setMouseTracking(True)
-
-    def add_widget(self, widget: cWidget):
-        self.widgets.append(widget)
-        widget.setParent(self)
-        self.load_widgets()
 
     def load_widgets(self):
-        self.w, self.h = self.width(), self.height()
         x_offset = 0
-        # y_offset = 0
         for widget in self.widgets:
-            widget.move(x_offset, 0, mode=cWidget.MOVE_BY_PIXEL)
-            widget.load(self.w, self.h)
-            print(widget.text)
-            # y_offset += widget.height()
-            print(x_offset)
+            widget.move(x_offset, 0, cWidget.MOVE_BY_PIXEL)
             x_offset += widget.width()
-
-    def resizeEvent(self, event):
-        self.w, self.h = self.width(), self.height()
-        self.load_widgets()
-        super().resizeEvent(event)

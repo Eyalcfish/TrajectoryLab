@@ -1,23 +1,11 @@
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QFrame, QWidget
 from PySide6.QtCore import Qt
-from cwidgets import cButton, cDrawer, cLabel, cPopUpButton, cWidget
+from cwidgets import cButton, cDrawer, cLabel, cPopUpButton, cWidget, Window
 
-from cwindow import Window
 
 class MainWindow(Window):
     def __init__(self):
         super().__init__("Dynamic Layout Example", (800, 600))
-
-        # img = cWidget(pos=(0,0),
-        #                 size=(1,0.5),
-        #                 stretch=True,
-        #                 radius=10,
-        #                 bg_color="#3498db",
-        #                 border_color="#2980b9",
-        #                 border_width=20,
-        #                 parent=self
-        #         )
-        # self.add_widgets(img)
 
         # Activation area is a rectangle in fractional coordinates (x, y, width, height)
         engines_button = cPopUpButton(
@@ -59,16 +47,6 @@ class MainWindow(Window):
         )
         poly_functions_button.clicked.connect(lambda: print("Poly Functions button clicked!"))
 
-        top_bar = cWidget(
-            pos=(0,0),
-            size=(1,0.1),
-            stretch=True,
-            bg_color="#c5600d",
-            border_color="#96311f",
-            border_width=20,
-            clip_to_parent=True,
-        )
-
         drawer = cDrawer(
             pos=(0.1,0.1),
             size=(0.8,0.8),
@@ -76,8 +54,6 @@ class MainWindow(Window):
             bg_color="#18beca",
             radius=10,
         )
-
-        drawer.lower()
 
         cbutton = cButton(
             "Click Me",
@@ -108,8 +84,7 @@ class MainWindow(Window):
         self.add_widget(drawer)
         drawer.add_widget(cbutton)
         drawer.add_widget(cbutton2)
-        cbutton.hide()
-        # self.add_widgets(top_bar)
+
         self.add_widget(engines_button)
         self.add_widget(engines_results_button)
         self.add_widget(poly_functions_button)
