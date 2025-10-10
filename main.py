@@ -10,6 +10,7 @@ class MainWindow(Window):
         # Activation area is a rectangle in fractional coordinates (x, y, width, height)
         engines_button = cPopUpButton(
             "Engines",
+            pos_mode=cWidget.MOVE_BY_FRACTION,
             pos=(-0.7,0.15),
             text_size=15,
             activation_area=(0.3,1),
@@ -23,6 +24,7 @@ class MainWindow(Window):
 
         engines_results_button = cPopUpButton(
             "Engine Results",
+            pos_mode=cWidget.MOVE_BY_FRACTION,
             pos=(-0.83,0.3),
             text_size=15,
             activation_area=(0.17,1),
@@ -35,7 +37,8 @@ class MainWindow(Window):
         engines_results_button.clicked.connect(lambda: print("Engines button clicked!"))
 
         poly_functions_button = cPopUpButton(
-            "Poly Functions",
+            "Poly Functions",         
+            pos_mode=cWidget.MOVE_BY_FRACTION,
             pos=(-0.83,0.45),
             text_size=15,
             activation_area=(0.17,1),
@@ -80,6 +83,8 @@ class MainWindow(Window):
             text_size=20,
             mode=cButton.MODE_FIXED_TEXT_SIZE
         )
+
+        drawer.setMouseTracking(True)
 
         self.add_widget(drawer)
         drawer.add_widget(cbutton)

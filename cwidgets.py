@@ -5,9 +5,9 @@ from PySide6.QtCore import Qt, Signal, QRect
 
 
 class cWidget(QWidget):
-    MOVE_BY_PIXEL = 2
-    MOVE_BY_FRACTION = 3
-    MOVE_BY_SELF_FRACTION = 4
+    MOVE_BY_PIXEL = 0
+    MOVE_BY_FRACTION = 1
+    MOVE_BY_SELF_FRACTION = 2
     def __init__(self, bg_color="#FFFFFF", radius=0, border_color=None, border_width=0,
                  pos=(0,0), size=(0,0), stretch=False, pos_mode=MOVE_BY_FRACTION, clip_to_parent=True, self_dimensions=0):
         super().__init__()
@@ -91,10 +91,11 @@ class cWidget(QWidget):
 
         x = int(width * self.cpos[0])
         y = int(height * self.cpos[1])
-        if self.pos_mode == self.MOVE_BY_PIXEL:
+        if self.pos_mode == cWidget.MOVE_BY_PIXEL:
             x = int(self.cpos[0])
             y = int(self.cpos[1])
-        elif self.pos_mode == self.MOVE_BY_SELF_FRACTION:
+            print(x)
+        elif self.pos_mode == cWidget.MOVE_BY_SELF_FRACTION:
             if self.self_dimensions == 1 or self.self_dimensions == 3:
                 x = int(width * self.cpos[0])
             if self.self_dimensions >= 2:
@@ -119,6 +120,7 @@ class Window(QMainWindow):
     def add_widget(self, widget: cWidget):
         self.cWidgets.append(widget)
         widget.adopt(self)
+        self.load_widgets()
 
     def load_widget(self, widget: cWidget):
         widget.load(self.w, self.h)
@@ -152,27 +154,26 @@ class cLabel(cWidget):
         self.m = min(parent_w, parent_h)
 
         if self.mode == self.MODE_FRACTIONAL_SIZE:
-            x = int(parent_w * self.cpos[0])
-            y = int(parent_h * self.cpos[1])
             width = int(self.csize[0] * parent_w)
             height = int(self.csize[1] * parent_h)
-            if self.self_dimensions == 1 or self.self_dimensions == 3:
-                x = int(width * self.cpos[0])
-            if self.self_dimensions >= 2:
-                y = int(height * self.cpos[1])
-            self.setGeometry(x, y, width, height)
         else:
             self.font.setPixelSize(int(self.text_size * self.m / 200))
             fm = QFontMetrics(self.font)
             width = fm.horizontalAdvance(self.text) + 10
             height = fm.height() + 4
-            x = int(parent_w * self.cpos[0])
-            y = int(parent_h * self.cpos[1])
+
+        x = int(width * self.cpos[0])
+        y = int(height * self.cpos[1])
+        if self.pos_mode == cWidget.MOVE_BY_PIXEL:
+            x = int(self.cpos[0])
+            y = int(self.cpos[1])
+            print(x)
+        elif self.pos_mode == cWidget.MOVE_BY_SELF_FRACTION:
             if self.self_dimensions == 1 or self.self_dimensions == 3:
                 x = int(width * self.cpos[0])
             if self.self_dimensions >= 2:
                 y = int(height * self.cpos[1])
-            self.setGeometry(x, y, width, height)
+        self.setGeometry(x, y, width, height)
 
         self.update()
 
@@ -342,8 +343,15 @@ class cDrawer(ccontainerWidget):
                  pos=(0,0), size=(0,0), stretch=False, pos_mode=cWidget.MOVE_BY_FRACTION, clip_to_parent=True, self_dimensions=0):
         super().__init__(bg_color, radius, border_color, border_width, pos, size, stretch, pos_mode=pos_mode ,clip_to_parent=clip_to_parent, self_dimensions=self_dimensions)
 
+    def add_widget(self, widget: cWidget):
+        self.widgets.append(widget)
+        widget.setParent(self)
+        widget.parent_h = self.height()
+        widget.parent_w = self.width()
+        self.load_widgets()
+
     def load_widgets(self):
         x_offset = 0
-        for widget in self.widgets:
-            widget.move(x_offset, 0, cWidget.MOVE_BY_PIXEL)
-            x_offset += widget.width()
+        for i in range(len(self.widgets)):
+            self.widgets[i].move(x_offset, 0, cWidget.MOVE_BY_PIXEL)
+            x_offset += self.widgets[i].width()
