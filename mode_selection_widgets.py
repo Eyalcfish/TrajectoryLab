@@ -101,10 +101,10 @@ class PopUpButton(EventMixin, QPushButton):
 
     def _stylesheet(self, color):
         if self.popped:
-            hover_color = QColor("lime").lighter(150).name()
+            hover_color = QColor("#22C55E").lighter(150).name()
             return f"""
                 QPushButton {{
-                    background-color: lime;
+                    background-color: #22C55E;
                     border: none;
                     color: black;
                     border-radius: {self.m*0.12}px;
@@ -114,7 +114,7 @@ class PopUpButton(EventMixin, QPushButton):
                     background-color: {hover_color};
                 }}
                 QPushButton:pressed {{
-                    background-color: lime;
+                    background-color: #22C55E;
                 }}
             """
         else:

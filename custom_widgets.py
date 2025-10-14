@@ -45,6 +45,7 @@ class State(Enum):
     LEAVE_HOVER = 3
     CLICKED = 4
     REPAINT = 5
+    CHILD_ADDED = 6
 
 class EventMixin:
     """Mixin that calls cupdate(State) for standard events."""
