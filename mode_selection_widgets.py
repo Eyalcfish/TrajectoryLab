@@ -41,10 +41,11 @@ class blankWidget(EventMixin, QWidget):
 
 
 class PopUpButton(EventMixin, QPushButton):
-    def __init__(self, text, w, h, pop_offset=0.2, popped=False, background_color="#3498db", parent=None):
+    def __init__(self, text, w, h, pop_offset=0.2, popped=False, background_color="#FFA94D", selected_color="#FF7A00", parent=None):
         super().__init__(text, parent)
         self.pop_offset = pop_offset
         self.background_color = background_color
+        self.selcted_color = selected_color
         self.base_pos = None
         self.w = w
         self.h = h
@@ -58,9 +59,8 @@ class PopUpButton(EventMixin, QPushButton):
         self.popped = popped
 
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.setStyleSheet(self._stylesheet(self.background_color))
         self.parent_w = self.parent().width()
-        fit_text_to_widget(self, text=self.text(), padding=self.m*0.2)
+        self.cupdate(state=State.DEFAULT)
 
     def cupdate(self, state: State):
         self.parent_w = self.parent().width()
@@ -79,7 +79,7 @@ class PopUpButton(EventMixin, QPushButton):
                 self.hover_anim.setStartValue(self.pos())
                 self.hover_anim.setEndValue(self.base_pos)
                 self.hover_anim.start()
-            self.setStyleSheet(self._stylesheet(self.background_color))
+            self.setStyleSheet(self._stylesheet())
             QTimer.singleShot(0, lambda: fit_text_to_widget(self, text=self.text(), padding=self.m*0.1))
 
         if state == State.ENTER_HOVER and not self.popped:
@@ -98,42 +98,27 @@ class PopUpButton(EventMixin, QPushButton):
         self.popped = condition
         self.cupdate(State.REPAINT)
 
-
-    def _stylesheet(self, color):
+    def _stylesheet(self):
         if self.popped:
-            hover_color = QColor("#22C55E").lighter(150).name()
-            return f"""
-                QPushButton {{
-                    background-color: #22C55E;
-                    border: none;
-                    color: black;
-                    border-radius: {self.m*0.12}px;
-                    padding: {self.m*0.1}px;
-                }}
-                QPushButton:hover {{
-                    background-color: {hover_color};
-                }}
-                QPushButton:pressed {{
-                    background-color: #22C55E;
-                }}
-            """
+            color = self.selcted_color
         else:
-            hover_color = QColor(color).lighter(120).name()
-            return f"""
-                QPushButton {{
-                    background-color: {color};
-                    border: none;
-                    color: white;
-                    border-radius: {self.m*0.12}px;
-                    padding: {self.m*0.1}px;
-                }}
-                QPushButton:hover {{
-                    background-color: {hover_color};
-                }}
-                QPushButton:pressed {{
-                    background-color: {color};
-                }}
-            """
+            color = self.background_color
+        hover_color = QColor(color).lighter(120).name()
+        return f"""
+            QPushButton {{
+                background-color: {color};
+                border: none;
+                color: white;
+                border-radius: {self.m*0.12}px;
+                padding: {self.m*0.1}px;
+            }}
+            QPushButton:hover {{
+                background-color: {hover_color};
+            }}
+            QPushButton:pressed {{
+                background-color: {color};
+            }}
+        """
 
     def _offset_vector(self):
         return QPoint(self.pop_offset*self.parent_w, 0)

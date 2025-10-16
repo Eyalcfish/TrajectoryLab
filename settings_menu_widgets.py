@@ -6,10 +6,12 @@ class SettingWidget(EventMixin, QWidget):
     CONTAINER = 0
     LINEEDIT = 1
     LABEL = 2
-    def __init__(self, default_value, setting_name = "Setting", parent = None, w = 0.5, h = 0.1, background_color = "#ffffff"):
+    def __init__(self, default_value, setting_name = "Setting", parent = None, w = 0.5, h = 0.1, x_pos = 0, y_pos = 0, background_color = "#ffffff"):
         super().__init__(parent)
         self.w = w
         self.h = h
+        self.x_pos = x_pos
+        self.y_pos = y_pos
         self.background_color = background_color
 
         self.lineedit = QLineEdit(self)
@@ -29,6 +31,8 @@ class SettingWidget(EventMixin, QWidget):
             self.lineedit.setPlaceholderText(str(self.default_value))
             
         if state == State.RESIZE or state == State.DEFAULT:
+
+            self.move(self.x_pos*self.parent_w, self.y_pos*self.parent_h)
 
             self.setFixedSize(self.w * self.parent_w, self.h * self.parent_h)
             self.setStyleSheet(self._stylesheet(self.CONTAINER))
@@ -53,16 +57,18 @@ class SettingWidget(EventMixin, QWidget):
             border: None;
             border-radius: 0px;
             padding: {self.m*0.03}px;
-            color: #1E293B
+            color: #B0B0B0
             """
         elif widget == self.LABEL:
             return f"""
             background-color: transparent;
             border: none;
             padding: 0px;
+            color: #E6F0FF;
             """
         
 class SettingWidgetContainer(EventMixin, QWidget):
+    LABEL = 0
     def __init__(self, space = 0.25, category_name = "Category", parent = None, w = 0.5, h = 0.1, x = 0, y = 0, background_color = "#ffffff"):
         super().__init__(parent)
         self.w = w
@@ -74,7 +80,7 @@ class SettingWidgetContainer(EventMixin, QWidget):
 
         self.label = QLabel(category_name, self)
 
-        self.settings = []
+        self.settings: list[SettingWidget] = []
         self.category_name = category_name
         
         self.cupdate(State.DEFAULT)
@@ -98,10 +104,18 @@ class SettingWidgetContainer(EventMixin, QWidget):
 
             fit_text_to_widget(self.label, text=str(self.category_name), padding=0)
             self.label.setGeometry(0.2*self.w*self.parent_w, 0, 0.6*self.w*self.parent_w, 0.3*self.h*self.parent_h)
-            self.label.setStyleSheet(self._stylesheet())
+            self.label.setStyleSheet(self._stylesheet(self.LABEL))
+
+            if self.settings == []:
+                setting_height = 0.1
+            else:
+                setting_height = (0.65-self.space)/len(self.settings)
 
             for i, setting in enumerate(self.settings):
-                setting.move(0, (0.35 + i*self.space)*self.h*self.parent_h)
+                setting.h = setting_height
+                setting.w = 0.93
+                setting.x_pos = 0.07
+                setting.y_pos = (0.35 + i*(self.space/len(self.settings) + setting_height))
                 setting.cupdate(State.RESIZE)
 
     def _stylesheet(self, widget=None):
@@ -115,4 +129,5 @@ class SettingWidgetContainer(EventMixin, QWidget):
             background-color: transparent;
             border: none;
             padding: 0px;
+            color: #3B82F6
             """
