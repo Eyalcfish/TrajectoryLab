@@ -1,6 +1,7 @@
 from custom_widgets import EventMixin, State, fit_text_to_widget
 from PySide6.QtCore import Qt, QPoint, QPropertyAnimation, QEasingCurve, QTimer
 from PySide6.QtWidgets import QPushButton, QSizePolicy, QWidget, QLineEdit, QLabel
+from PySide6.QtGui import QDoubleValidator
 
 class SettingWidget(EventMixin, QWidget):
     CONTAINER = 0
@@ -15,6 +16,7 @@ class SettingWidget(EventMixin, QWidget):
         self.background_color = background_color
 
         self.lineedit = QLineEdit(self)
+        self.lineedit.setValidator(QDoubleValidator())
         self.label = QLabel(setting_name, self)
 
         self.default_value = default_value
@@ -52,13 +54,19 @@ class SettingWidget(EventMixin, QWidget):
             border-radius: {self.m*0.12}px;
             """
         elif widget == self.LINEEDIT:
-            return f"""
-            background-color: #ffffff;
-            border: None;
-            border-radius: 0px;
-            padding: {self.m*0.03}px;
-            color: #B0B0B0
-            """
+            return (f"""
+            QLineEdit {{
+                background-color: #1E1E1E;
+                color: #FFFFFF;
+                border: None;
+                border-radius: 0px;
+                padding: {self.m*0.03}px;
+                border-bottom: {self.m*0.03}px solid #2C2C2C;
+            }}
+            QLineEdit:focus {{
+                border-bottom: {self.m*0.03}px solid #3B82F6;
+            }}
+            """)
         elif widget == self.LABEL:
             return f"""
             background-color: transparent;
@@ -131,3 +139,50 @@ class SettingWidgetContainer(EventMixin, QWidget):
             padding: 0px;
             color: #3B82F6
             """
+    
+class csvGenerateButton(EventMixin, QPushButton):
+    def __init__(self, text, parent = None, w = 0.2, h = 0.1, x_pos = 0.4, y_pos = 0.85):
+        super().__init__(text, parent)
+        self.w = w
+        self.h = h
+        self.x_pos = x_pos
+        self.y_pos = y_pos
+        self.prec = 0
+        self.original_text = text
+
+        self.cupdate(State.DEFAULT)
+
+    def cupdate(self, state: State):
+        self.parent_w = self.parent().width()
+        self.parent_h = self.parent().height()
+        self.m = min(self.w*self.parent_w, self.h*self.parent_h)
+        if state == State.DEFAULT:
+            self.setAttribute(Qt.WA_StyledBackground, True)
+            
+        if state == State.RESIZE or state == State.DEFAULT or state == State.REPAINT:
+
+            self.move(self.x_pos*self.parent_w, self.y_pos*self.parent_h)
+
+            self.setFixedSize(self.w * self.parent_w, self.h * self.parent_h)
+            self.setStyleSheet(self._stylesheet())
+
+            self.setText(f"{self.original_text} ({self.prec:.0%})")
+
+            fit_text_to_widget(self, text=str(self.text()), padding=self.m*0.05)
+
+    def _stylesheet(self):
+        return f"""
+            QPushButton {{
+                background-color: #22C55E;
+                border: none;
+                color: #E6F0FF;
+                border-radius: {self.m*0.1}px;
+                padding: {self.m*0.05}px;
+            }}
+            QPushButton:hover {{
+                background-color: #32D56E;
+            }}
+            QPushButton:pressed {{
+                background-color: #22C55E;
+            }}
+        """
