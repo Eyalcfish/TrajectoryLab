@@ -3,8 +3,7 @@ import csv
 import json
 
 
-SETTINGS_PATH = "/home/eyalc/Projects/TrajectoryLab/TrajectoryLab/settings"
-OUTPUT_PATH = "/home/eyalc/Projects/TrajectoryLab/TrajectoryLab/shooting-sim-output"
+PROFILES_PATH = "/home/eyalc/Projects/TrajectoryLab/TrajectoryLab/profiles"
 
 class Result():
     def __init__(self, id, json_path, csv_path, output = [], settings = {}):
@@ -14,8 +13,8 @@ class Result():
         self.output = output
         self.settings = settings
 
-def get_id_of_file(file_name: str):
-    return int(file_name.replace("shots_", "").replace("data_", "").replace(".csv", "").replace(".json", ""))
+def get_id_of_folder(file_name: str):
+    return int(file_name.replace("profile_", ""))
 
 def read_json_file(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
@@ -34,7 +33,7 @@ def read_csv_file(file_path):
 def count_files():
     i = 0
 
-    folder = Path(OUTPUT_PATH)
+    folder = Path(PROFILES_PATH)
 
     for file in folder.iterdir():
         if file.is_file():
@@ -42,48 +41,32 @@ def count_files():
     return i 
 
 def list_of_results(include_output,include_settings):
-    folder = Path(OUTPUT_PATH)
+    folder = Path(PROFILES_PATH)
 
     results = []
 
-    for file in folder.iterdir():
-        if file.is_file():
-            csv_name = file.name
-            id = get_id_of_file(csv_name)
-            json_name = "No Json Found"
-            if Path(f"{SETTINGS_PATH}/data_{id}.json").is_file():
-                json_name = f"data_{id}.json"
+    for profile in folder.iterdir():
+        if not profile.is_file():
+            id = get_id_of_folder(profile.as_posix())
             output = []
             settings = {}
             if include_output:
-                output = read_csv_file(f"{OUTPUT_PATH}/{csv_name}")
-            if include_settings and json_name != "No Json Found":
-                settings = read_json_file(f"{SETTINGS_PATH}/{json_name}")
-            result = Result(id,json_path=f"{SETTINGS_PATH}/{json_name}", csv_path=f"{OUTPUT_PATH}/{csv_name}",output=output, settings=settings)
+                output = read_csv_file(f"{profile.as_posix()}/output.csv")
+            if include_settings:
+                settings = read_json_file(f"{profile.as_posix()}/settings.json")
+            result = Result(id,json_path=f"{profile.as_posix()}/settings.json", csv_path=f"{profile.as_posix()}/output.csv",output=output, settings=settings)
             results.append(result)
 
     return results
 
-def get_result_by_id(id, include_output, include_settings):
-    csv_path = f"{OUTPUT_PATH}/shots_{id}.csv"
-    json_path = f"{SETTINGS_PATH}/data_{id}.json"
-    output = []
-    settings = {}
-    if include_output:
-        output = read_csv_file(csv_path)
-    if include_settings and Path(json_path).is_file():
-        settings = read_json_file(json_path)
-    result = Result(id, json_path=json_path, csv_path=csv_path, output=output, settings=settings)
-    return result
-
 def get_latest_id():
     max_id = -1
 
-    folder = Path(OUTPUT_PATH)
+    folder = Path(PROFILES_PATH)
 
-    for file in folder.iterdir():
-        if file.is_file():
-            id = get_id_of_file(file.name)
+    for profile in folder.iterdir():
+        if not profile.is_file():
+            id = get_id_of_folder(profile.name)
             if id > max_id:
                 max_id = id
     return max_id

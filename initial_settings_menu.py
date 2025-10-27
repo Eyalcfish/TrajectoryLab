@@ -6,6 +6,7 @@ from settings_menu_widgets import SettingWidget, SettingWidgetContainer, csvGene
 import subprocess
 import concurrent.futures
 import filemanagment
+from pathlib import Path
 
 class InitialSettingsMenu(EventMixin, QWidget):
     def __init__(self, parent = None, background_color = "#FFFFFF"):
@@ -21,22 +22,23 @@ class InitialSettingsMenu(EventMixin, QWidget):
         finished = Signal()
         output = Signal(str)
 
-        def __init__(self, settings_dict, settings_path, output_folder_path, output_file_name, exe_path):
+        def __init__(self, settings_dict, generation_id, exe_path):
             super().__init__()
             self.settings_dict = settings_dict  # store the Python dict
-            self.settings_path = settings_path
-            self.output_folder_path = output_folder_path
-            self.output_file_name = output_file_name
             self.exe_path = exe_path
+            self.generation_id = generation_id
 
         def run(self):
+            folder = Path(f"profiles/profile_{self.generation_id}")
+            folder.mkdir(parents=True, exist_ok=True)
+
             # Save JSON first
-            with open(self.settings_path, "w") as f:
+            with open(f"profiles/profile_{self.generation_id}/settings.json", "w") as f:
                 json.dump(self.settings_dict, f)
 
             # Run exe and read stdout live
             process = subprocess.Popen(
-                [self.exe_path, self.settings_path, self.output_folder_path, self.output_file_name],
+                [self.exe_path, f"profiles/profile_{self.generation_id}/settings.json", f"profiles/profile_{self.generation_id}", "output.csv"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True
@@ -49,7 +51,7 @@ class InitialSettingsMenu(EventMixin, QWidget):
     def generate_json(self, generation_id):
         self.csv_button.setEnabled(False)
         self.thread = QThread()
-        self.worker = self.Worker(settings_dict=self.settings ,settings_path=f"settings/data_{generation_id}.json", output_folder_path="/home/eyalc/Projects/TrajectoryLab/TrajectoryLab/shooting-sim-output/", output_file_name=f"shots_{generation_id}.csv", exe_path="/home/eyalc/Projects/TrajectoryLab/TrajectoryLab/shootingsim.exe")
+        self.worker = self.Worker(settings_dict=self.settings , generation_id= generation_id, exe_path="/home/eyalc/Projects/TrajectoryLab/TrajectoryLab/shootingsim.exe")
         self.worker.moveToThread(self.thread)
 
         def set_button_prec(prec):
