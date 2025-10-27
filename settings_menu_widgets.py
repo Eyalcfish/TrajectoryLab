@@ -166,7 +166,7 @@ class csvGenerateButton(EventMixin, QPushButton):
             self.setFixedSize(self.w * self.parent_w, self.h * self.parent_h)
             self.setStyleSheet(self._stylesheet())
 
-            self.setText(f"{self.original_text} ({self.prec:.0%})")
+            self.setText(f"{self.original_text} ({self.prec:.1%})")
 
             fit_text_to_widget(self, text=str(self.text()), padding=self.m*0.05)
 

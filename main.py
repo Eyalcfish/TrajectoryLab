@@ -85,7 +85,7 @@ if __name__ == "__main__":
     app = QApplication([])
 
     window = MyWindow()
-    window.setStyleSheet("background-color: #1A1A1A;") #0D0D0D
+    window.setStyleSheet("background-color: #1A1A1A;")
     window.resize(600, 400)
 
     load_widgets(window)
