@@ -24,7 +24,7 @@ class InitialSettingsMenu(EventMixin, QWidget):
 
         def __init__(self, settings_dict, generation_id, exe_path):
             super().__init__()
-            self.settings_dict = settings_dict  # store the Python dict
+            self.settings_dict = settings_dict 
             self.exe_path = exe_path
             self.generation_id = generation_id
 
@@ -32,11 +32,9 @@ class InitialSettingsMenu(EventMixin, QWidget):
             folder = Path(f"profiles/profile_{self.generation_id}")
             folder.mkdir(parents=True, exist_ok=True)
 
-            # Save JSON first
             with open(f"profiles/profile_{self.generation_id}/settings.json", "w") as f:
                 json.dump(self.settings_dict, f)
 
-            # Run exe and read stdout live
             process = subprocess.Popen(
                 [self.exe_path, f"profiles/profile_{self.generation_id}/settings.json", f"profiles/profile_{self.generation_id}", "output.csv"],
                 stdout=subprocess.PIPE,
@@ -163,3 +161,4 @@ class InitialSettingsMenu(EventMixin, QWidget):
         return f"""
             background-color: {self.background_color};
             """
+    

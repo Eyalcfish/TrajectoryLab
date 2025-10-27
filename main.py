@@ -8,8 +8,6 @@ from settings_menu_widgets import SettingWidget, SettingWidgetContainer
 from initial_settings_menu import InitialSettingsMenu
 DEBUG = True
 
-
-
 # 🎨 Core Colors
 
 # Primary (Blue): #3B82F6 — strong, modern blue (like Tailwind’s)

@@ -186,3 +186,47 @@ class csvGenerateButton(EventMixin, QPushButton):
                 background-color: #22C55E;
             }}
         """
+
+class ProfileSelector(EventMixin, QLineEdit):
+    def __init__(self, parent = None, default_value = None, w = 0.3, h = 0.1, x_pos = 0.35, y_pos = 0.1):
+        super().__init__(parent)
+        self.w = w
+        self.h = h
+        self.x_pos = x_pos
+        self.y_pos = y_pos
+        self.default_value = default_value
+
+        self.cupdate(State.DEFAULT)
+
+    def cupdate(self, state: State):
+        self.parent_w = self.parent().width()
+        self.parent_h = self.parent().height()
+        self.m = min(self.w*self.parent_w, self.h*self.parent_h)
+        if state == State.DEFAULT:
+            self.setAttribute(Qt.WA_StyledBackground, True)
+            if self.default_value is not None:
+                self.setPlaceholderText(str(self.default_value))
+            
+        if state == State.RESIZE or state == State.DEFAULT:
+
+            self.move(self.x_pos*self.parent_w, self.y_pos*self.parent_h)
+
+            self.setFixedSize(self.w * self.parent_w, self.h * self.parent_h)
+            self.setStyleSheet(self._stylesheet())
+
+            fit_text_to_widget(self, text=str(self.default_value), padding=self.m*0.03)
+
+    def _stylesheet(self):
+        return (f"""
+            QLineEdit {{
+                background-color: #1E1E1E;
+                color: #FFFFFF;
+                border: None;
+                border-radius: {self.m*0.1}px;
+                padding: {self.m*0.03}px;
+                border-bottom: {self.m*0.03}px solid #2C2C2C;
+            }}
+            QLineEdit:focus {{
+                border-bottom: {self.m*0.03}px solid #3B82F6;
+            }}
+            """)
