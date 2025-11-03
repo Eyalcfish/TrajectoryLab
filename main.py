@@ -6,6 +6,8 @@ from custom_widgets import EventMixin, State, fit_text_to_widget
 from mode_selection_widgets import blankWidget, sideBar, sideBarButton
 from settings_menu_widgets import SettingWidget, SettingWidgetContainer
 from initial_settings_menu import InitialSettingsMenu
+from csv_view_widgets import ResultShowcaseWidget,CSVGrid
+from filemanagment import Result, list_of_results
 DEBUG = True
 
 # 🎨 Core Colors
@@ -33,6 +35,8 @@ DEBUG = True
 # Error: #EF4444 — bright red for alerts
 
 initial_settings_menu = None
+csv_showcase = None
+current_window = 1
 
 class MyWindow(QWidget):
     def __init__(self):
@@ -50,7 +54,8 @@ class MyWindow(QWidget):
         super().resizeEvent(event)
 
 def load_widgets(window):
-    global initial_settings_menu
+    global initial_settings_menu, csv_showcase
+    csv_showcase = CSVGrid(x = 0.15, y=0.05, w=0.8, h=0.9, results=list_of_results(include_output=False, include_settings=False), parent=window, background_color="#1A1A1A")
     sidebar = sideBar(" Mode Selection ", w=0.1, pos="left", parent=window)
     sidebarButton1 = sideBarButton(" Initial Settings ", pressed= True, x=0.05, h=0.06, parent=sidebar)
     sidebar.add_button(sidebarButton1)
@@ -62,9 +67,11 @@ def load_widgets(window):
     sidebarButton2.clicked.connect(lambda: set_current_window(1, sidebarButton2, sidebarButton1, sidebarButton3))
     sidebarButton3.clicked.connect(lambda: set_current_window(2, sidebarButton3, sidebarButton1, sidebarButton2))
     initial_settings_menu = InitialSettingsMenu(parent = window)
+    csv_showcase.show()
+    initial_settings_menu.hide()
 
 def set_current_window(val, button: sideBarButton, button_out1: sideBarButton, button_out2: sideBarButton):
-    global current_window, initial_settings_menu
+    global current_window, initial_settings_menu, csv_showcase
     current_window = val
     button.pressed = True
     button_out1.pressed = False
@@ -74,8 +81,10 @@ def set_current_window(val, button: sideBarButton, button_out1: sideBarButton, b
     button_out2.cupdate(State.REPAINT)
     if current_window == 0:
         initial_settings_menu.show()
+        csv_showcase.hide()
     else:
         initial_settings_menu.hide()
+        csv_showcase.show()
 
 if __name__ == "__main__":
     current_window = 0  

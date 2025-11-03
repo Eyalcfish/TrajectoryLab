@@ -1,6 +1,7 @@
 from pathlib import Path
 import csv
 import json
+import os
 
 
 PROFILES_PATH = "/home/eyalc/Projects/TrajectoryLab/TrajectoryLab/profiles"
@@ -14,7 +15,7 @@ class Result():
         self.settings = settings
 
 def get_id_of_folder(file_name: str):
-    return int(file_name.replace("profile_", ""))
+    return int(os.path.basename(file_name).replace("profile_", ""))
 
 def read_json_file(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
