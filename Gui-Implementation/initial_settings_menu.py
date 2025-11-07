@@ -1,11 +1,11 @@
 import json
-from custom_widgets import EventMixin, State, fit_text_to_widget
+from TrajectoryLab.custom_widgets import EventMixin, State, fit_text_to_widget
 from PySide6.QtCore import Qt, QPoint, QPropertyAnimation, QEasingCurve, QTimer, QThread, QObject, Signal
 from PySide6.QtWidgets import QPushButton, QSizePolicy, QWidget, QLineEdit, QLabel
-from settings_menu_widgets import SettingWidget, SettingWidgetContainer, csvGenerateButton
+from TrajectoryLab.settings_menu_widgets import SettingWidget, SettingWidgetContainer, csvGenerateButton
 import subprocess
 import concurrent.futures
-import filemanagment
+import TrajectoryLab.filemanagment as filemanagment
 from pathlib import Path
 
 class InitialSettingsMenu(EventMixin, QWidget):
@@ -49,7 +49,7 @@ class InitialSettingsMenu(EventMixin, QWidget):
     def generate_json(self, generation_id):
         self.csv_button.setEnabled(False)
         self.thread = QThread()
-        self.worker = self.Worker(settings_dict=self.settings , generation_id= generation_id, exe_path="/home/eyalc/Projects/TrajectoryLab/TrajectoryLab/shootingsim.exe")
+        self.worker = self.Worker(settings_dict=self.settings , generation_id= generation_id, exe_path="shootingsim.exe")
         self.worker.moveToThread(self.thread)
 
         def set_button_prec(prec):

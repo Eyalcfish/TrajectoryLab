@@ -2,7 +2,7 @@ from custom_widgets import EventMixin, State, fit_text_to_widget
 from PySide6.QtCore import Qt, QPoint, QPropertyAnimation, QEasingCurve, QTimer
 from PySide6.QtWidgets import QPushButton, QSizePolicy, QWidget, QLineEdit, QLabel, QFrame, QTableWidget, QTableWidgetItem, QVBoxLayout, QHeaderView, QAbstractScrollArea
 from PySide6.QtGui import QDoubleValidator, Qt,QColor
-from filemanagment import Result, list_of_results
+from TrajectoryLab.filemanagment import Result, list_of_results
 import csv
 
 class CSVEditWidget(EventMixin, QFrame):

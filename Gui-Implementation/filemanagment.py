@@ -4,7 +4,7 @@ import json
 import os
 
 
-PROFILES_PATH = "/home/eyalc/Projects/TrajectoryLab/TrajectoryLab/profiles"
+PROFILES_PATH = "profiles"
 
 class Result():
     def __init__(self, id, json_path, csv_path, output = [], settings = {}):

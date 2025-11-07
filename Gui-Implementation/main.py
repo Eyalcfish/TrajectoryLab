@@ -2,12 +2,12 @@ from enum import Enum
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QFrame, QWidget, QVBoxLayout, QSizePolicy
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QPalette
-from custom_widgets import EventMixin, State, fit_text_to_widget
-from mode_selection_widgets import blankWidget, sideBar, sideBarButton
-from settings_menu_widgets import SettingWidget, SettingWidgetContainer
-from initial_settings_menu import InitialSettingsMenu
-from csv_view_widgets import ResultShowcaseWidget,CSVGrid
-from filemanagment import Result, list_of_results
+from TrajectoryLab.custom_widgets import EventMixin, State, fit_text_to_widget
+from TrajectoryLab.mode_selection_widgets import blankWidget, sideBar, sideBarButton
+from TrajectoryLab.settings_menu_widgets import SettingWidget, SettingWidgetContainer
+from TrajectoryLab.initial_settings_menu import InitialSettingsMenu
+from TrajectoryLab.csv_view_widgets import ResultShowcaseWidget,CSVGrid
+from TrajectoryLab.filemanagment import Result, list_of_results
 DEBUG = True
 
 # 🎨 Core Colors
@@ -99,3 +99,4 @@ if __name__ == "__main__":
 
     window.show()
     app.exec()
+    print("Hello World")
