@@ -1,3 +1,6 @@
-.venv/
-__pycache__/
-profiles/
+Gui-Implementation/.venv/
+Gui-Implementation/__pycache__/
+Gui-Implementation/profiles/
+Gui-Implementation\shootingsim.exe
+
+Shooting-Simulation/out/
