@@ -1,4 +1,4 @@
-from TrajectoryLab.custom_widgets import EventMixin, State, fit_text_to_widget
+from custom_widgets import EventMixin, State, fit_text_to_widget
 from PySide6.QtCore import Qt, QPoint, QPropertyAnimation, QEasingCurve, QTimer
 from PySide6.QtWidgets import QPushButton, QSizePolicy, QWidget, QLineEdit, QLabel
 from PySide6.QtGui import QDoubleValidator

@@ -2,7 +2,7 @@ from custom_widgets import EventMixin, State, fit_text_to_widget
 from PySide6.QtCore import Qt, QPoint, QPropertyAnimation, QEasingCurve, QTimer
 from PySide6.QtWidgets import QPushButton, QSizePolicy, QWidget, QLineEdit, QLabel, QFrame, QTableWidget, QTableWidgetItem, QVBoxLayout, QHeaderView, QAbstractScrollArea
 from PySide6.QtGui import QDoubleValidator, Qt,QColor
-from TrajectoryLab.filemanagment import Result, list_of_results
+from filemanagment import Result, list_of_results
 import csv
 
 class CSVEditWidget(EventMixin, QFrame):
@@ -15,7 +15,7 @@ class CSVEditWidget(EventMixin, QFrame):
         self.background_color = background_color
         self. result = result
 
-        self.csvdisplay = CSVDisplay(x=0.70, y=0, w=0.3, h=1, parent=self, background_color="#1A1A1A")
+        self.csvdisplay = CSVDisplay(x=0.70, y=0, w=0.3, h=1, parent=self, background_color={self.background_color})
         if result.csv_path != "":
             self.csvdisplay.load_csv(result.csv_path)
 
@@ -63,31 +63,33 @@ class CSVDisplay(EventMixin, QFrame):
         self.cupdate(State.DEFAULT)
         
     def load_csv(self, path: str):
-        with open(path, newline='', encoding='utf-8') as f:
-            reader = list(csv.reader(f))
-            if not reader:
-                return
+        try:
+            with open(path, newline='', encoding='utf-8') as f:
+                reader = list(csv.reader(f))
+                if not reader:
+                    return
 
-            headers = reader[0]
-            rows = reader[1:]
+                headers = reader[0]
+                rows = reader[1:]
 
-            self.table.setColumnCount(len(headers))
-            self.table.setHorizontalHeaderLabels(headers)
-            self.table.setRowCount(len(rows))
+                self.table.setColumnCount(len(headers))
+                self.table.setHorizontalHeaderLabels(headers)
+                self.table.setRowCount(len(rows))
 
-            for r, row in enumerate(rows):
-                for c, val in enumerate(row):
-                    self.table.setItem(r, c, QTableWidgetItem(val))
+                for r, row in enumerate(rows):
+                    for c, val in enumerate(row):
+                        self.table.setItem(r, c, QTableWidgetItem(val))
 
-            header = self.table.horizontalHeader()
-            header.setSectionResizeMode(QHeaderView.Stretch)
-            header.setMinimumSectionSize(1)
+                header = self.table.horizontalHeader()
+                header.setSectionResizeMode(QHeaderView.Stretch)
+                header.setMinimumSectionSize(1)
 
-            self.table.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-            self.table.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+                self.table.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+                self.table.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-
-            self.table.resizeRowsToContents()
+                self.table.resizeRowsToContents()
+        except Exception as e:
+            pass
 
     def cupdate(self, state: State):
         if not self.parent():
@@ -118,7 +120,7 @@ class CSVDisplay(EventMixin, QFrame):
             }}
 
             QTableWidget {{
-                background-color: #0d1117;
+                background-color: {self.background_color};
                 color: white;
                 gridline-color: #1A1A1A;
                 selection-background-color: #1f6feb;
@@ -135,15 +137,15 @@ class CSVDisplay(EventMixin, QFrame):
             }}
 
             QScrollBar:vertical {{
-                background: #0d1117;
+                background: #0F0F0F;
                 width: 10px;
                 margin: 0px;
             }}
             QScrollBar::handle:vertical {{
-                background: #0F0F0F;
+                background: #3F3F3F;
             }}
             QScrollBar::handle:vertical:hover {{
-                background: #3b82f6;
+                background: #0F0F0F;
             }}
         """
 
@@ -171,8 +173,6 @@ class ResultShowcaseWidget(EventMixin, QPushButton):
         self.cupdate(State.DEFAULT)
 
     def toggleeditmode(self):
-        print(id(self))
-        print(self.editwidget.isVisible())
         if self.editwidget.isVisible():
             self.editwidget.hide()
         else:
@@ -312,7 +312,6 @@ class CSVGrid(EventMixin, QFrame):
                 widget.y_pos = (rows * 0.25) + 0.02
                 widget.cupdate(State.RESIZE)
                 widget.raise_()
-                print(i)
 
     def _stylesheet(self):
         return f"""

@@ -1,11 +1,12 @@
 import json
-from TrajectoryLab.custom_widgets import EventMixin, State, fit_text_to_widget
+import os
+from custom_widgets import EventMixin, State, fit_text_to_widget
 from PySide6.QtCore import Qt, QPoint, QPropertyAnimation, QEasingCurve, QTimer, QThread, QObject, Signal
 from PySide6.QtWidgets import QPushButton, QSizePolicy, QWidget, QLineEdit, QLabel
-from TrajectoryLab.settings_menu_widgets import SettingWidget, SettingWidgetContainer, csvGenerateButton
+from settings_menu_widgets import SettingWidget, SettingWidgetContainer, csvGenerateButton
 import subprocess
 import concurrent.futures
-import TrajectoryLab.filemanagment as filemanagment
+import filemanagment as filemanagment
 from pathlib import Path
 
 class InitialSettingsMenu(EventMixin, QWidget):
@@ -32,18 +33,43 @@ class InitialSettingsMenu(EventMixin, QWidget):
             folder = Path(f"profiles/profile_{self.generation_id}")
             folder.mkdir(parents=True, exist_ok=True)
 
-            with open(f"profiles/profile_{self.generation_id}/settings.json", "w") as f:
+            with open(folder / "settings.json", "w") as f:
                 json.dump(self.settings_dict, f)
 
-            process = subprocess.Popen(
-                [self.exe_path, f"profiles/profile_{self.generation_id}/settings.json", f"profiles/profile_{self.generation_id}", "output.csv"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True
-            )
+            settings_path = str(folder.joinpath("settings.json").absolute())
+            output_path = str(folder.joinpath("output.csv").absolute())
+            
+            exe_path = str(Path(__file__).parent.absolute() / self.exe_path)
 
-            for line in process.stdout:
-                self.output.emit(line.strip())
+            try:
+                process = subprocess.Popen(
+                    [exe_path, settings_path, output_path],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    bufsize=1,
+                    universal_newlines=True
+                )
+
+                for line in process.stdout:
+                    self.output.emit(line.strip())
+
+                process.wait()
+
+                if process.returncode != 0:
+                    stderr_output = process.stderr.read()
+                    print("Error executing the simulation:")
+                    print(f"Return Code: {process.returncode}")
+                    print("STDERR:")
+                    print(stderr_output)
+                else:
+                    print("Simulation executed successfully.")
+
+            except FileNotFoundError:
+                print(f"Error: The executable at {exe_path} was not found.")
+            except Exception as e:
+                print(f"An unexpected error occurred: {e}")
+
             self.finished.emit()
 
     def generate_json(self, generation_id):
@@ -52,10 +78,13 @@ class InitialSettingsMenu(EventMixin, QWidget):
         self.worker = self.Worker(settings_dict=self.settings , generation_id= generation_id, exe_path="shootingsim.exe")
         self.worker.moveToThread(self.thread)
 
-        def set_button_prec(prec):
-            print("output: " + str(prec))
-            self.csv_button.prec = float(prec)/100
-            self.csv_button.cupdate(State.REPAINT)
+        def set_button_prec(prec: str):
+            prec = prec.replace(" %","")
+            try:
+                self.csv_button.prec = float(prec)/100
+                self.csv_button.cupdate(State.REPAINT)
+            except:
+                pass
 
         def finish_worker():
             self.csv_button.prec = 0
