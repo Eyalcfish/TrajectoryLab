@@ -36,7 +36,7 @@ DEBUG = True
 
 initial_settings_menu = None
 csv_showcase = None
-current_window = 1
+current_window = 0
 
 class MyWindow(QWidget):
     def __init__(self):
@@ -67,8 +67,8 @@ def load_widgets(window):
     sidebarButton2.clicked.connect(lambda: set_current_window(1, sidebarButton2, sidebarButton1, sidebarButton3))
     sidebarButton3.clicked.connect(lambda: set_current_window(2, sidebarButton3, sidebarButton1, sidebarButton2))
     initial_settings_menu = InitialSettingsMenu(parent = window)
-    csv_showcase.show()
-    initial_settings_menu.hide()
+    csv_showcase.hide()
+    initial_settings_menu.show()
 
 def set_current_window(val, button: sideBarButton, button_out1: sideBarButton, button_out2: sideBarButton):
     global current_window, initial_settings_menu, csv_showcase
