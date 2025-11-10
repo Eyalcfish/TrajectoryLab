@@ -4,18 +4,18 @@ from PySide6.QtWidgets import QPushButton, QSizePolicy, QWidget, QLineEdit, QLab
 from PySide6.QtGui import QDoubleValidator, Qt,QColor
 from filemanagment import Result, list_of_results
 import csv
+import color_palette as cp
 
 class CSVEditWidget(EventMixin, QFrame):
-    def __init__(self, x, y, w, h, result: Result, parent = None, background_color = "red"):
+    def __init__(self, x, y, w, h, result: Result, parent = None):
         super().__init__(parent)
         self.x_pos = x
         self.y_pos = y
         self.w = w
         self.h = h
-        self.background_color = background_color
         self. result = result
 
-        self.csvdisplay = CSVDisplay(x=0.70, y=0, w=0.3, h=1, parent=self, background_color={self.background_color})
+        self.csvdisplay = CSVDisplay(x=0.70, y=0, w=0.3, h=1, parent=self)
         if result.csv_path != "":
             self.csvdisplay.load_csv(result.csv_path)
 
@@ -30,29 +30,28 @@ class CSVEditWidget(EventMixin, QFrame):
             self.csvdisplay.setAttribute(Qt.WA_StyledBackground, True)
             
         if state == State.RESIZE or state == State.DEFAULT:
-
             self.setGeometry(self.x_pos * self.parent_w, self.y_pos * self.parent_h, self.w * self.parent_w, self.h * self.parent_h)
             self.csvdisplay.cupdate(State.RESIZE)
             
             self.setStyleSheet(self._stylesheet())
             self.raise_()
+            self.csvdisplay.raise_()
     
     def _stylesheet(self):
         return f"""
             QFrame {{
-                background-color: {self.background_color};
-                border-radius: {self.m*0.04}px;
+                background-color: {cp.CARD_SURFACE};
+                border-radius: 0;
             }}
         """
     
 class CSVDisplay(EventMixin, QFrame):
-    def __init__(self, x, y, w, h, parent=None, background_color="red"):
+    def __init__(self, x, y, w, h, parent=None):
         super().__init__(parent)
         self.x_pos = x
         self.y_pos = y
         self.w = w
         self.h = h
-        self.background_color = background_color
 
         self.table = QTableWidget(self)
         layout = QVBoxLayout(self)
@@ -114,38 +113,38 @@ class CSVDisplay(EventMixin, QFrame):
             QFrame {{
                 background-color: qlineargradient(
                     x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #0d1117,
-                    stop:1 #161b22
+                    stop:0 {cp.BACKGROUND_DARK},
+                    stop:1 {cp.CARD_SURFACE}
                 );
             }}
 
             QTableWidget {{
-                background-color: {self.background_color};
-                color: white;
-                gridline-color: #1A1A1A;
-                selection-background-color: #1f6feb;
-                selection-color: white;
+                background-color: {cp.CARD_SURFACE};
+                color: {cp.PRIMARY_TEXT};
+                gridline-color: {cp.BORDER_DIVIDER};
+                selection-background-color: {cp.INFO_HIGHLIGHT};
+                selection-color: {cp.PRIMARY_TEXT};
                 border: none;
                 font-family: "Inter", "Roboto", sans-serif;
                 font-size: 13px;
             }}
 
             QHeaderView::section {{
-                background-color: #1e293b;
-                color: #ffffff;
+                background-color: {cp.BORDER_DIVIDER};
+                color: {cp.PRIMARY_TEXT};
                 font-weight: bold;
             }}
 
             QScrollBar:vertical {{
-                background: #0F0F0F;
+                background: {cp.BACKGROUND_DARK};
                 width: 10px;
                 margin: 0px;
             }}
             QScrollBar::handle:vertical {{
-                background: #3F3F3F;
+                background: {cp.BORDER_DIVIDER};
             }}
             QScrollBar::handle:vertical:hover {{
-                background: #0F0F0F;
+                background: {cp.INFO_HIGHLIGHT};
             }}
         """
 
@@ -155,31 +154,24 @@ class ResultShowcaseWidget(EventMixin, QPushButton):
     LINE = 1
     BUTTON = 2
     LABEL = 3
-    def __init__(self, x, y, w, h, result: Result, removal_function, parent = None, background_color = "red"):
+    def __init__(self, x, y, w, h, result: Result, removal_function, edit_function, parent = None):
         super().__init__(parent)
         self.x_pos = x
         self.y_pos = y
         self.w = w
         self.h = h
-        self.background_color = background_color
         self.result = result
         self.removal_function = removal_function
+        self.edit_function = edit_function
         self.line = QFrame(self)
         self.remove_button = QPushButton("X", self)
         self.label = QLabel("profile "+str(result.id), self)
 
-        self.editwidget = CSVEditWidget(x=0, y=0.05, w=1, h=1, result=result, parent=parent, background_color="#2A2A2A")
+        self.editwidget = CSVEditWidget(x=0, y=0, w=1, h=1, result=result, parent=parent)
         self.editwidget.hide()
         self.cupdate(State.DEFAULT)
 
-    def toggleeditmode(self):
-        if self.editwidget.isVisible():
-            self.editwidget.hide()
-        else:
-            self.editwidget.show()
-            self.editwidget.raise_()
-
-    def cupdate(self, state: State):    
+    def cupdate(self, state: State):
         self.parent_w = self.parent().width()
         self.parent_h = self.parent().height()
         self.m = min(self.w*self.parent_w, self.h*self.parent_h)
@@ -190,15 +182,19 @@ class ResultShowcaseWidget(EventMixin, QPushButton):
             self.remove_button.setAttribute(Qt.WA_StyledBackground, True)
             self.label.setAttribute(Qt.WA_StyledBackground, True)
             self.remove_button.raise_()
-            self.clicked.connect(self.toggleeditmode)
-            self.remove_button.clicked.connect(self.removal_function)
+            self.clicked.connect(lambda: self.edit_function(self.result.id))
+            self.remove_button.clicked.connect(lambda: self.removal_function(self.result.id))
             
         if state == State.RESIZE or state == State.DEFAULT:
 
-            self.setGeometry(self.x_pos * self.parent_w, self.y_pos * self.parent_h, self.w * self.parent_w, self.h * self.parent_h)
-            self.line.setGeometry(0.03*self.w*self.parent_w, 0.1 * self.h * self.parent_h, 0.92 * self.parent_w*self.w, 0.03 * self.h * self.parent_h)
-            self.remove_button.setGeometry(0.8*self.w*self.parent_w, 0.15*self.h*self.parent_h, min(self.w*self.parent_w, self.h*self.parent_h)*0.15,min(self.w*self.parent_w, self.h*self.parent_h)*0.15)
-            self.label.setGeometry(0.05*self.w*self.parent_w, 0, 0.9*self.w*self.parent_w, 0.1*self.h*self.parent_h)
+            self.setGeometry(self.x_pos * self.parent_w, self.y_pos * self.parent_h,
+                              self.w * self.parent_w, self.h * self.parent_h)
+            self.line.setGeometry(0.03*self.w*self.parent_w, 0.1 * self.h * self.parent_h,
+                                   0.92 * self.parent_w*self.w, 0.03 * self.h * self.parent_h)
+            self.remove_button.setGeometry(0.8*self.w*self.parent_w, 0.15*self.h*self.parent_h,
+                                            min(self.w*self.parent_w, self.h*self.parent_h)*0.15,min(self.w*self.parent_w, self.h*self.parent_h)*0.15)
+            self.label.setGeometry(0.05*self.w*self.parent_w, 0,
+                                    0.9*self.w*self.parent_w, 0.1*self.h*self.parent_h)
             fit_text_to_widget(self.label, "profile "+str(self.result.id), padding=0)
             fit_text_to_widget(self.remove_button, "X", padding=2)
             
@@ -209,58 +205,60 @@ class ResultShowcaseWidget(EventMixin, QPushButton):
 
     def _stylesheet(self, state=None):
         if state == self.CONTAINER or state is None:
-            lighter_color = QColor(self.background_color).lighter(170).name()
+            style = cp.BUTTON_STYLES["secondary"]
             return f"""
                 QPushButton {{
-                    background-color: {self.background_color};
+                    background-color: {style["background"]};
+                    border: none;
+                    color: {style["text"]};
                     border-radius: {self.m*0.04}px;
                 }}
                 QPushButton:hover {{
-                    background-color: {lighter_color};
+                    background-color: {style["hover"]};
                 }}
                 QPushButton:pressed {{
-                    background-color: {self.background_color};
+                    background-color: {style["pressed"]};
                 }}
             """
         if state == self.LABEL:
             return f"""
-                background-color: #0D0D0D;
+                background-color: transparent;
                 border-radius: {self.m*0.01}px;
-                color: #FFFFFF;
+                color: {cp.PRIMARY_TEXT};
                 """
         
         if state == self.LINE:
             return f"""
-            background-color: #38BDF8;
+            background-color: {cp.BORDER_DIVIDER};
             border-radius: {self.m*0.01}px;
             """
         if state == self.BUTTON:
+            style = cp.BUTTON_STYLES["danger"]
             return f"""
                 QPushButton {{
-                    background-color: #FE1A1A;
+                    background-color: {style["background"]};
                     border-radius: {self.m*0.02}px;
-                    color: #E6F0FF;
+                    color: {style["text"]};
                     font-weight: bold;
                 }}
                 QPushButton:hover {{
-                    background-color: #FF7A7A;
+                    background-color: {style["hover"]};
                 }}
                 QPushButton:pressed {{
-                    background-color: #FE1A1A;
+                    background-color: {style["pressed"]};
                 }}
 
             """
         
 class CSVGrid(EventMixin, QFrame):
-    def __init__(self, x, y, w, h, results, parent=None, background_color="red"):
+    def __init__(self, x, y, w, h, results, parent=None):
         super().__init__(parent)
         self.x_pos = x
         self.y_pos = y
         self.w = w
         self.h = h
-        self.background_color = background_color
         self.results = []
-        self.widgets = []
+        self.widgets: list[ResultShowcaseWidget] = []
 
         self.update_results(results)
 
@@ -277,9 +275,23 @@ class CSVGrid(EventMixin, QFrame):
             widget.deleteLater()
         self.widgets = []
         for result in self.results:
-            widget = ResultShowcaseWidget(x=0, y=0, w=0.1, h=0.1, removal_function=lambda: self.remove_result(0),  result=result, parent=self, background_color="#0D0D0D")
+            widget = ResultShowcaseWidget(x=0, y=0, w=0.1, h=0.1, removal_function=self.remove_result, edit_function=self.edit_widget, result=result, parent=self)
             self.widgets.append(widget)
         self.cupdate(State.RESIZE)
+
+    def edit_widget(self, id):
+        print("editing", id)
+        for widget in self.widgets:
+            print(widget.editwidget.isVisible(), widget.result.id, id)
+            if widget.result.id == id:
+                if not widget.editwidget.isVisible():
+                    widget.editwidget.show()
+                    widget.editwidget.raise_()
+                else:
+                    widget.editwidget.hide()
+            else:
+                widget.editwidget.hide()
+            widget.editwidget.cupdate(State.RESIZE)
 
     def remove_result(self, id):
         self.results = [res for res in self.results if res.id != id]
@@ -316,7 +328,7 @@ class CSVGrid(EventMixin, QFrame):
     def _stylesheet(self):
         return f"""
             QFrame {{
-                background-color: {self.background_color};
+                background-color: {cp.TRANSPARENT};
                 border-radius: {self.m*0.04}px;
             }}
         """

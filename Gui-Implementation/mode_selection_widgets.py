@@ -1,8 +1,8 @@
-
 from custom_widgets import EventMixin, State, fit_text_to_widget
 from PySide6.QtCore import Qt, QPoint, QPropertyAnimation, QEasingCurve, QTimer
 from PySide6.QtWidgets import QPushButton, QSizePolicy, QWidget
 from PySide6.QtGui import QColor
+import color_palette as cp
 
 class blankWidget(EventMixin, QWidget): 
     def __init__(self, x, y, w, h, debug=False, parent=None):
@@ -22,10 +22,10 @@ class blankWidget(EventMixin, QWidget):
     def debug(self, mode):
         if mode:
             print("Debug mode is ON")
-            self.setStyleSheet("background-color: red;")
+            self.setStyleSheet(f"background-color: {cp.RED};")
             self.raise_()
         else:
-            self.setStyleSheet("background-color: transparent;")
+            self.setStyleSheet(f"background-color: {cp.TRANSPARENT};")
             self.lower()
         self.cupdate(State.DEFAULT)
 
@@ -65,35 +65,37 @@ class sideBarButton(EventMixin, QPushButton):
 
     def _stylesheet(self, pressed):
         if pressed:
+            style = cp.BUTTON_STYLES["primary"]
             return f"""
                 QPushButton {{
-                    background-color: #38BDF8;
-                    border: {self.m*0.05}px solid #1E40AF;
-                    color: #E6F0FF;
+                    background-color: {cp.INFO_HIGHLIGHT};
+                    border: {self.m*0.05}px solid {style["border"]};
+                    color: {style["text"]};
                     border-radius: {self.m*0.1}px;
                     padding: {self.m*0.05}px;
                 }}
                 QPushButton:hover {{
-                    background-color: #38BDF8;
+                    background-color: {cp.INFO_HIGHLIGHT};
                 }}
                 QPushButton:pressed {{
-                    background-color: #38BDF8;
+                    background-color: {cp.INFO_HIGHLIGHT};
                 }}
             """
         else:
+            style = cp.BUTTON_STYLES["primary"]
             return f"""
                 QPushButton {{
-                    background-color: #3B82F6;
+                    background-color: {style["background"]};
                     border: none;
-                    color: #E6F0FF;
+                    color: {style["text"]};
                     border-radius: {self.m*0.1}px;
                     padding: {self.m*0.05}px;
                 }}
                 QPushButton:hover {{
-                    background-color: #38BDF8;
+                    background-color: {style["hover"]};
                 }}
                 QPushButton:pressed {{
-                    background-color: #3B82F6;
+                    background-color: {style["pressed"]};
                 }}
             """
     
@@ -136,8 +138,8 @@ class sideBar(EventMixin, QWidget):
 
     def _stylesheet(self): #1A1A1A
         return f"""
-            background-color: #0D0D0D; 
-            border-right: {self.m*0.01}px solid #1F1F1F;
+            background-color: {cp.BACKGROUND_DARK}; 
+            border-right: {self.m*0.01}px solid {cp.BACKGROUND_STYLES["sidebar"]["color"]};
             border-radius: 0px;
         """
 

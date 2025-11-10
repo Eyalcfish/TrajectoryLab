@@ -14,6 +14,9 @@ class Result():
         self.output = output
         self.settings = settings
 
+    def __str__(self):
+        return f"Result(id={self.id}, json_path={self.json_path}, csv_path={self.csv_path}, output={self.output}, settings={self.settings})"
+
 def get_id_of_folder(file_name: str):
     return int(os.path.basename(file_name).replace("profile_", ""))
 

@@ -8,31 +8,8 @@ from settings_menu_widgets import SettingWidget, SettingWidgetContainer
 from initial_settings_menu import InitialSettingsMenu
 from csv_view_widgets import ResultShowcaseWidget,CSVGrid
 from filemanagment import Result, list_of_results
+import color_palette as cp
 DEBUG = True
-
-# 🎨 Core Colors
-
-# Primary (Blue): #3B82F6 — strong, modern blue (like Tailwind’s)
-# Primary Light: #60A5FA — hover/highlight version
-# Primary Dark: #1E40AF — pressed or dark-theme accent
-
-# ⚫ Neutrals / Background
-
-# Background (Dark): #0D0D0D — near-black, not pure (#000) to avoid harsh contrast
-# Card / Surface: #1A1A1A — slightly lighter for UI separation
-# Border / Divider: #2C2C2C
-
-# ⚪ Text & Highlights
-
-# Primary Text: #FFFFFF — pure white for clarity
-# Secondary Text: #B0B0B0 — muted gray for lower emphasis
-# Accent White (on blue): #E6F0FF — softer white that blends well with blue
-
-# 🔵 Optional Accent Shades
-
-# Info / Highlight: #38BDF8 — light cyan tint for hover effects
-# Success: #22C55E — green that fits blue contrast
-# Error: #EF4444 — bright red for alerts
 
 initial_settings_menu = None
 csv_showcase = None
@@ -55,7 +32,7 @@ class MyWindow(QWidget):
 
 def load_widgets(window):
     global initial_settings_menu, csv_showcase
-    csv_showcase = CSVGrid(x = 0.15, y=0.05, w=0.8, h=0.9, results=list_of_results(include_output=False, include_settings=False), parent=window, background_color="#1A1A1A")
+    csv_showcase = CSVGrid(x = 0.1, y=0, w=0.9, h=1, results=list_of_results(include_output=False, include_settings=False), parent=window)
     sidebar = sideBar(" Mode Selection ", w=0.1, pos="left", parent=window)
     sidebarButton1 = sideBarButton(" Initial Settings ", pressed= True, x=0.05, h=0.06, parent=sidebar)
     sidebar.add_button(sidebarButton1)
@@ -93,7 +70,7 @@ if __name__ == "__main__":
     app = QApplication([])
 
     window = MyWindow()
-    window.setStyleSheet("background-color: #1A1A1A;")
+    window.setStyleSheet(f"background-color: {cp.BACKGROUND_STYLES['main_window']['color']};")
     window.resize(600, 400)
 
     load_widgets(window)

@@ -2,18 +2,18 @@ from custom_widgets import EventMixin, State, fit_text_to_widget
 from PySide6.QtCore import Qt, QPoint, QPropertyAnimation, QEasingCurve, QTimer
 from PySide6.QtWidgets import QPushButton, QSizePolicy, QWidget, QLineEdit, QLabel
 from PySide6.QtGui import QDoubleValidator
+import color_palette as cp
 
 class SettingWidget(EventMixin, QWidget):
     CONTAINER = 0
     LINEEDIT = 1
     LABEL = 2
-    def __init__(self, default_value, setting_name = "Setting", parent = None, w = 0.5, h = 0.1, x_pos = 0, y_pos = 0, background_color = "#ffffff"):
+    def __init__(self, default_value, setting_name = "Setting", parent = None, w = 0.5, h = 0.1, x_pos = 0, y_pos = 0):
         super().__init__(parent)
         self.w = w
         self.h = h
         self.x_pos = x_pos
         self.y_pos = y_pos
-        self.background_color = background_color
 
         self.lineedit = QLineEdit(self)
         self.lineedit.setValidator(QDoubleValidator())
@@ -50,21 +50,21 @@ class SettingWidget(EventMixin, QWidget):
     def _stylesheet(self, widget):
         if widget == self.CONTAINER:
             return f"""
-            background-color: {self.background_color};
+            background-color: {cp.CARD_SURFACE};
             border-radius: {self.m*0.12}px;
             """
         elif widget == self.LINEEDIT:
             return (f"""
             QLineEdit {{
-                background-color: #1E1E1E;
-                color: #FFFFFF;
+                background-color: {cp.CARD_SURFACE};
+                color: {cp.PRIMARY_TEXT};
                 border: None;
                 border-radius: 0px;
                 padding: {self.m*0.03}px;
-                border-bottom: {self.m*0.03}px solid #2C2C2C;
+                border-bottom: {self.m*0.03}px solid {cp.BORDER_DIVIDER};
             }}
             QLineEdit:focus {{
-                border-bottom: {self.m*0.03}px solid #3B82F6;
+                border-bottom: {self.m*0.03}px solid {cp.PRIMARY_BLUE};
             }}
             """)
         elif widget == self.LABEL:
@@ -72,18 +72,17 @@ class SettingWidget(EventMixin, QWidget):
             background-color: transparent;
             border: none;
             padding: 0px;
-            color: #E6F0FF;
+            color: {cp.SECONDARY_TEXT};
             """
         
 class SettingWidgetContainer(EventMixin, QWidget):
     LABEL = 0
-    def __init__(self, space = 0.25, category_name = "Category", parent = None, w = 0.5, h = 0.1, x = 0, y = 0, background_color = "#ffffff"):
+    def __init__(self, space = 0.25, category_name = "Category", parent = None, w = 0.5, h = 0.1, x = 0, y = 0):
         super().__init__(parent)
         self.w = w
         self.h = h
         self.x_pos = x
         self.y_pos = y
-        self.background_color = background_color
         self.space = space
 
         self.label = QLabel(category_name, self)
@@ -129,7 +128,7 @@ class SettingWidgetContainer(EventMixin, QWidget):
     def _stylesheet(self, widget=None):
         if widget is None:
             return f"""
-            background-color: {self.background_color};
+            background-color: {cp.CARD_SURFACE};
             border-radius: {self.m*0.05}px;
             """
         elif widget == self.LABEL:
@@ -137,7 +136,7 @@ class SettingWidgetContainer(EventMixin, QWidget):
             background-color: transparent;
             border: none;
             padding: 0px;
-            color: #3B82F6
+            color: {cp.PRIMARY_BLUE}
             """
     
 class csvGenerateButton(EventMixin, QPushButton):
@@ -171,19 +170,20 @@ class csvGenerateButton(EventMixin, QPushButton):
             fit_text_to_widget(self, text=str(self.text()), padding=self.m*0.05)
 
     def _stylesheet(self):
+        style = cp.BUTTON_STYLES["success"]
         return f"""
             QPushButton {{
-                background-color: #22C55E;
+                background-color: {style["background"]};
                 border: none;
-                color: #E6F0FF;
+                color: {style["text"]};
                 border-radius: {self.m*0.1}px;
                 padding: {self.m*0.05}px;
             }}
             QPushButton:hover {{
-                background-color: #32D56E;
+                background-color: {style["hover"]};
             }}
             QPushButton:pressed {{
-                background-color: #22C55E;
+                background-color: {style["pressed"]};
             }}
         """
 
@@ -219,14 +219,14 @@ class ProfileSelector(EventMixin, QLineEdit):
     def _stylesheet(self):
         return (f"""
             QLineEdit {{
-                background-color: #1E1E1E;
-                color: #FFFFFF;
+                background-color: {cp.CARD_SURFACE};
+                color: {cp.PRIMARY_TEXT};
                 border: None;
                 border-radius: {self.m*0.1}px;
                 padding: {self.m*0.03}px;
-                border-bottom: {self.m*0.03}px solid #2C2C2C;
+                border-bottom: {self.m*0.03}px solid {cp.BORDER_DIVIDER};
             }}
             QLineEdit:focus {{
-                border-bottom: {self.m*0.03}px solid #3B82F6;
+                border-bottom: {self.m*0.03}px solid {cp.PRIMARY_BLUE};
             }}
             """)

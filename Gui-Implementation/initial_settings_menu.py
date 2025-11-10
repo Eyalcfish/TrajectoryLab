@@ -8,11 +8,11 @@ import subprocess
 import concurrent.futures
 import filemanagment as filemanagment
 from pathlib import Path
+import color_palette as cp
 
 class InitialSettingsMenu(EventMixin, QWidget):
-    def __init__(self, parent = None, background_color = "#FFFFFF"):
+    def __init__(self, parent = None):
         super().__init__(parent)
-        self.background_color = background_color
         self.settings = {}
 
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
@@ -120,29 +120,29 @@ class InitialSettingsMenu(EventMixin, QWidget):
 
 
     def load_settings_menu(self):
-        self.target_settings = SettingWidgetContainer(category_name="Target Settings", parent=self, w=0.3, h=0.25, x=0.175, y=0.65, background_color="#0D0D0D")
-        self.target_height_setting = SettingWidget(default_value=42, setting_name="Target Height", parent=self.target_settings, background_color="#0D0D0D")
-        self.target_radius_setting = SettingWidget(default_value=3.14, setting_name="Target Radius", parent=self.target_settings, background_color="#0D0D0D")
-        self.distance_tolerance_setting = SettingWidget(default_value = 3.14, setting_name = "Distance Tolerance", parent=self.target_settings, background_color="#0D0D0D")
+        self.target_settings = SettingWidgetContainer(category_name="Target Settings", parent=self, w=0.3, h=0.25, x=0.175, y=0.65)
+        self.target_height_setting = SettingWidget(default_value=42, setting_name="Target Height", parent=self.target_settings)
+        self.target_radius_setting = SettingWidget(default_value=3.14, setting_name="Target Radius", parent=self.target_settings)
+        self.distance_tolerance_setting = SettingWidget(default_value = 3.14, setting_name = "Distance Tolerance", parent=self.target_settings)
 
-        self.robot_speed_settings = SettingWidgetContainer(category_name="Robot Speed Settings", parent=self, w=0.3, h=0.15, x=0.575, y=0.35, background_color="#0D0D0D")
-        self.max_robot_speed_setting = SettingWidget(default_value=42, setting_name="Max Robot Speed", parent=self.robot_speed_settings, background_color="#0D0D0D")
-        self.robot_speed_delta_setting = SettingWidget(default_value=3.14, setting_name="Robot Speed Delta", parent=self.robot_speed_settings, background_color="#0D0D0D")
+        self.robot_speed_settings = SettingWidgetContainer(category_name="Robot Speed Settings", parent=self, w=0.3, h=0.15, x=0.575, y=0.35)
+        self.max_robot_speed_setting = SettingWidget(default_value=42, setting_name="Max Robot Speed", parent=self.robot_speed_settings)
+        self.robot_speed_delta_setting = SettingWidget(default_value=3.14, setting_name="Robot Speed Delta", parent=self.robot_speed_settings)
 
-        self.angle_settings = SettingWidgetContainer(category_name="Angle Settings", parent=self, w=0.3, h=0.25, x=0.175, y=0.05, background_color="#0D0D0D")
-        self.max_angle_setting = SettingWidget(default_value=42, setting_name="Max Angle", parent=self.angle_settings, background_color="#0D0D0D")
-        self.min_angle_setting = SettingWidget(default_value=3.14, setting_name="Min Angle", parent=self.angle_settings, background_color="#0D0D0D")
-        self.angle_delta_setting = SettingWidget(default_value = 3.14, setting_name = "Angle Delta", parent=self.angle_settings, background_color="#0D0D0D")
+        self.angle_settings = SettingWidgetContainer(category_name="Angle Settings", parent=self, w=0.3, h=0.25, x=0.175, y=0.05)
+        self.max_angle_setting = SettingWidget(default_value=42, setting_name="Max Angle", parent=self.angle_settings)
+        self.min_angle_setting = SettingWidget(default_value=3.14, setting_name="Min Angle", parent=self.angle_settings)
+        self.angle_delta_setting = SettingWidget(default_value = 3.14, setting_name = "Angle Delta", parent=self.angle_settings)
 
-        self.distance_settings = SettingWidgetContainer(category_name="Distance Settings", parent=self, w=0.3, h=0.25, x=0.575, y=0.05, background_color="#0D0D0D")
-        self.max_distance_setting = SettingWidget(default_value=42, setting_name="Max Distance", parent=self.distance_settings, background_color="#0D0D0D")
-        self.min_distance_setting = SettingWidget(default_value=3.14, setting_name="Min Distance", parent=self.distance_settings, background_color="#0D0D0D")
-        self.distance_delta_setting = SettingWidget(default_value = 3.14, setting_name = "Distance Delta", parent=self.distance_settings, background_color="#0D0D0D")
+        self.distance_settings = SettingWidgetContainer(category_name="Distance Settings", parent=self, w=0.3, h=0.25, x=0.575, y=0.05)
+        self.max_distance_setting = SettingWidget(default_value=42, setting_name="Max Distance", parent=self.distance_settings)
+        self.min_distance_setting = SettingWidget(default_value=3.14, setting_name="Min Distance", parent=self.distance_settings)
+        self.distance_delta_setting = SettingWidget(default_value = 3.14, setting_name = "Distance Delta", parent=self.distance_settings)
 
-        self.speed_settings = SettingWidgetContainer(category_name="Shooter Speed Settings", parent=self, w=0.3, h=0.25, x=0.175, y=0.35, background_color="#0D0D0D")
-        self.max_speed_setting = SettingWidget(default_value=42, setting_name="Max Shooter Speed", parent=self.speed_settings, background_color="#0D0D0D")
-        self.min_speed_setting = SettingWidget(default_value=3.14, setting_name="Min Shooter Speed", parent=self.speed_settings, background_color="#0D0D0D")
-        self.delta_speed_setting = SettingWidget(default_value = 3.14, setting_name = "Shooter Speed Delta", parent=self.speed_settings, background_color="#0D0D0D")
+        self.speed_settings = SettingWidgetContainer(category_name="Shooter Speed Settings", parent=self, w=0.3, h=0.25, x=0.175, y=0.35)
+        self.max_speed_setting = SettingWidget(default_value=42, setting_name="Max Shooter Speed", parent=self.speed_settings)
+        self.min_speed_setting = SettingWidget(default_value=3.14, setting_name="Min Shooter Speed", parent=self.speed_settings)
+        self.delta_speed_setting = SettingWidget(default_value = 3.14, setting_name = "Shooter Speed Delta", parent=self.speed_settings)
 
         self.target_height_setting.lineedit.textChanged.connect(lambda x: self.change_setting("targetheight", x))
         self.target_radius_setting.lineedit.textChanged.connect(lambda x: self.change_setting("targetradius", x))
@@ -188,6 +188,6 @@ class InitialSettingsMenu(EventMixin, QWidget):
 
     def _stylesheet(self):
         return f"""
-            background-color: {self.background_color};
+            background-color: {cp.TRANSPARENT};
             """
     
