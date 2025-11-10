@@ -7,6 +7,10 @@ import csv
 import color_palette as cp
 
 class CSVEditWidget(EventMixin, QFrame):
+    CONTAINER = 0
+    BUTTON = 1
+    LABEL = 2
+
     def __init__(self, x, y, w, h, result: Result, parent = None):
         super().__init__(parent)
         self.x_pos = x
@@ -16,8 +20,17 @@ class CSVEditWidget(EventMixin, QFrame):
         self. result = result
 
         self.csvdisplay = CSVDisplay(x=0.70, y=0, w=0.3, h=1, parent=self)
-        if result.csv_path != "":
-            self.csvdisplay.load_csv(result.csv_path)
+        if result is not None:
+            if result.csv_path is not "":
+                self.csvdisplay.load_csv(result.csv_path)
+
+        self.remove_button = QPushButton("X", self)
+        self.remove_button.clicked.connect(self.hide)
+
+        id = 1
+        if result is not None:
+            id = result.id
+        self.label = QLabel("Editing profile "+str(id, self))
 
         self.cupdate(State.DEFAULT)
 
@@ -30,20 +43,60 @@ class CSVEditWidget(EventMixin, QFrame):
             self.csvdisplay.setAttribute(Qt.WA_StyledBackground, True)
             
         if state == State.RESIZE or state == State.DEFAULT:
+            if self.isVisible():
+                self.csvdisplay.show()
+                self.csvdisplay.raise_()
+            
             self.setGeometry(self.x_pos * self.parent_w, self.y_pos * self.parent_h, self.w * self.parent_w, self.h * self.parent_h)
             self.csvdisplay.cupdate(State.RESIZE)
             
-            self.setStyleSheet(self._stylesheet())
+            self.remove_button.setGeometry(0.02*self.w*self.parent_w, 0.02*self.h*self.parent_h,
+                                            min(self.w*self.parent_w, self.h*self.parent_h)*0.1,min(self.w*self.parent_w, self.h*self.parent_h)*0.1)
+            fit_text_to_widget(self.remove_button, "X", padding=2)  
+            self.remove_button.setStyleSheet(self._stylesheet(self.BUTTON))
+
+            self.label.setGeometry(0.15*self.w*self.parent_w, 0.02*self.h*self.parent_h,
+                                    0.8*self.w*self.parent_w, 0.1*self.h*self.parent_h)
+            fit_text_to_widget(self.label, "Editing profile "+str(self.result.id), padding=0)
+            self.label.setStyleSheet(self._stylesheet(self.LABEL))  
+
+            self.setStyleSheet(self._stylesheet(self.CONTAINER))
             self.raise_()
+            self.remove_button.raise_()
             self.csvdisplay.raise_()
+            self.label.raise_()
     
-    def _stylesheet(self):
-        return f"""
-            QFrame {{
-                background-color: {cp.CARD_SURFACE};
-                border-radius: 0;
-            }}
-        """
+    def _stylesheet(self, state):
+        if state == self.CONTAINER or state is None:
+            return f"""
+                QFrame {{
+                    background-color: {cp.CARD_SURFACE};
+                    border-radius: 0;
+                }}
+            """
+        if state == self.BUTTON:
+            style = cp.BUTTON_STYLES["danger"]
+            return f"""
+                QPushButton {{
+                    background-color: {style["background"]};
+                    border-radius: {self.m*0.02}px;
+                    color: {style["text"]};
+                    font-weight: bold;
+                }}
+                QPushButton:hover {{
+                    background-color: {style["hover"]};
+                }}
+                QPushButton:pressed {{
+                    background-color: {style["pressed"]};
+                }}
+
+            """
+        if state == self.LABEL:
+            return f"""
+                background-color: transparent;
+                border-radius: {self.m*0.01}px;
+                color: {cp.PRIMARY_TEXT};
+                """
     
 class CSVDisplay(EventMixin, QFrame):
     def __init__(self, x, y, w, h, parent=None):
@@ -167,9 +220,14 @@ class ResultShowcaseWidget(EventMixin, QPushButton):
         self.remove_button = QPushButton("X", self)
         self.label = QLabel("profile "+str(result.id), self)
 
+        self.clicked.connect(lambda: self.edit_function(self))
+        self.remove_button.clicked.connect(lambda: self.removal_function(self))
+        
         self.editwidget = CSVEditWidget(x=0, y=0, w=1, h=1, result=result, parent=parent)
         self.editwidget.hide()
         self.cupdate(State.DEFAULT)
+
+            
 
     def cupdate(self, state: State):
         self.parent_w = self.parent().width()
@@ -182,9 +240,7 @@ class ResultShowcaseWidget(EventMixin, QPushButton):
             self.remove_button.setAttribute(Qt.WA_StyledBackground, True)
             self.label.setAttribute(Qt.WA_StyledBackground, True)
             self.remove_button.raise_()
-            self.clicked.connect(lambda: self.edit_function(self.result.id))
-            self.remove_button.clicked.connect(lambda: self.removal_function(self.result.id))
-            
+
         if state == State.RESIZE or state == State.DEFAULT:
 
             self.setGeometry(self.x_pos * self.parent_w, self.y_pos * self.parent_h,
@@ -195,6 +251,7 @@ class ResultShowcaseWidget(EventMixin, QPushButton):
                                             min(self.w*self.parent_w, self.h*self.parent_h)*0.15,min(self.w*self.parent_w, self.h*self.parent_h)*0.15)
             self.label.setGeometry(0.05*self.w*self.parent_w, 0,
                                     0.9*self.w*self.parent_w, 0.1*self.h*self.parent_h)
+            
             fit_text_to_widget(self.label, "profile "+str(self.result.id), padding=0)
             fit_text_to_widget(self.remove_button, "X", padding=2)
             
@@ -202,6 +259,8 @@ class ResultShowcaseWidget(EventMixin, QPushButton):
             self.line.setStyleSheet(self._stylesheet(self.LINE))
             self.label.setStyleSheet(self._stylesheet(self.LABEL))
             self.remove_button.setStyleSheet(self._stylesheet(self.BUTTON))
+
+            self.lower()
 
     def _stylesheet(self, state=None):
         if state == self.CONTAINER or state is None:
@@ -260,6 +319,8 @@ class CSVGrid(EventMixin, QFrame):
         self.results = []
         self.widgets: list[ResultShowcaseWidget] = []
 
+        self.edit_widget = CSVEditWidget(x=0, y=0, w=1, h=1, result=None, parent=parent)
+
         self.update_results(results)
 
         self.cupdate(State.DEFAULT)
@@ -279,19 +340,10 @@ class CSVGrid(EventMixin, QFrame):
             self.widgets.append(widget)
         self.cupdate(State.RESIZE)
 
-    def edit_widget(self, id):
-        print("editing", id)
-        for widget in self.widgets:
-            print(widget.editwidget.isVisible(), widget.result.id, id)
-            if widget.result.id == id:
-                if not widget.editwidget.isVisible():
-                    widget.editwidget.show()
-                    widget.editwidget.raise_()
-                else:
-                    widget.editwidget.hide()
-            else:
-                widget.editwidget.hide()
-            widget.editwidget.cupdate(State.RESIZE)
+    def edit_widget(self, button: ResultShowcaseWidget):
+        self.update_results(button.result) 
+        self.edit_widget.show()
+        self.edit_widget.cupdate(State.RESIZE)
 
     def remove_result(self, id):
         self.results = [res for res in self.results if res.id != id]
@@ -321,7 +373,7 @@ class CSVGrid(EventMixin, QFrame):
                 widget.w = 0.23
                 widget.h = 0.25
                 widget.x_pos = (col * 0.25) + 0.02
-                widget.y_pos = (rows * 0.25) + 0.02
+                widget.y_pos = (rows * 0.27) + 0.02
                 widget.cupdate(State.RESIZE)
                 widget.raise_()
 
