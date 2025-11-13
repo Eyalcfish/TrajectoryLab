@@ -1,79 +1,115 @@
-from enum import Enum
-from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QFrame, QWidget, QVBoxLayout, QSizePolicy
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QPalette
-from custom_widgets import EventMixin, State, fit_text_to_widget
-from mode_selection_widgets import blankWidget, sideBar, sideBarButton
-from settings_menu_widgets import SettingWidget, SettingWidgetContainer
+import sys
+from PySide6.QtWidgets import QApplication, QWidget, QHBoxLayout, QStackedWidget, QLabel
+from custom_widgets import State,BaseWidget, EventMixin
+from mode_selection_widgets import SideBar, SideBarButton
 from initial_settings_menu import InitialSettingsMenu
-from csv_view_widgets import ResultShowcaseWidget,CSVGrid
-from filemanagment import Result, list_of_results
+from csv_view_widgets import CSVGrid
+from filemanagment import list_of_results
 import color_palette as cp
-DEBUG = True
 
-initial_settings_menu = None
-csv_showcase = None
-current_window = 0
+# class testWidget(QWidget, EventMixin, QFrame):
+#     def __init__(self, parent):
+#         super().__init__(parent)
+#         self.x_pos = 0
+#         self.y_pos = 0
+#         self.w = 100
+#         self.h = 100
+#         self.parent_w = 0
+#         self.parent_h = 0
+#         self.m = 0
 
-class MyWindow(QWidget):
+class MainWindow(QWidget):
+    """Main window for the Trajectory Lab application."""
+
     def __init__(self):
         super().__init__()
+        self.setWindowTitle("Trajectory Lab")
+        self.setStyleSheet(f"background-color: {cp.BACKGROUND_STYLES['main_window']['color']};")
+        self.resize(800, 600)
+        
+        # Main layout
+        main_layout = QHBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
 
-    def resizeEvent(self, event):
-        # Update children geometry manually
-        for child in self.findChildren(QWidget):
-            if hasattr(child, "resizeEvent"):
-                # Optionally trigger cupdate or resizeEvent
-                child.resizeEvent(event)
-                if hasattr(child, "cupdate"):
-                    child.cupdate(State.RESIZE)
+        # Sidebar
+        self.sidebar = self._create_sidebar()
+        main_layout.addWidget(self.sidebar)
 
-        super().resizeEvent(event)
+        # Content area with QStackedWidget
+        self.stacked_widget = QStackedWidget()
+        self._populate_views()
+        main_layout.addWidget(self.stacked_widget)
 
-def load_widgets(window):
-    global initial_settings_menu, csv_showcase
-    csv_showcase = CSVGrid(x = 0.1, y=0, w=0.9, h=1, results=list_of_results(include_output=False, include_settings=False), parent=window)
-    sidebar = sideBar(" Mode Selection ", w=0.1, pos="left", parent=window)
-    sidebarButton1 = sideBarButton(" Initial Settings ", pressed= True, x=0.05, h=0.06, parent=sidebar)
-    sidebar.add_button(sidebarButton1)
-    sidebarButton2 = sideBarButton(" CSV View ", pressed = False, x=0.05, h=0.06, parent=sidebar)
-    sidebar.add_button(sidebarButton2)
-    sidebarButton3 = sideBarButton(" Poly Functions ", pressed = False, x=0.05, h=0.06, parent=sidebar)
-    sidebar.add_button(sidebarButton3)
-    sidebarButton1.clicked.connect(lambda: set_current_window(0, sidebarButton1, sidebarButton2, sidebarButton3))
-    sidebarButton2.clicked.connect(lambda: set_current_window(1, sidebarButton2, sidebarButton1, sidebarButton3))
-    sidebarButton3.clicked.connect(lambda: set_current_window(2, sidebarButton3, sidebarButton1, sidebarButton2))
-    initial_settings_menu = InitialSettingsMenu(parent = window)
-    csv_showcase.hide()
-    initial_settings_menu.show()
+        # Set layout stretch factors
+        main_layout.setStretchFactor(self.sidebar, 1)
+        main_layout.setStretchFactor(self.stacked_widget, 9)
 
-def set_current_window(val, button: sideBarButton, button_out1: sideBarButton, button_out2: sideBarButton):
-    global current_window, initial_settings_menu, csv_showcase
-    current_window = val
-    button.pressed = True
-    button_out1.pressed = False
-    button_out2.pressed = False
-    button.cupdate(State.REPAINT)
-    button_out1.cupdate(State.REPAINT)
-    button_out2.cupdate(State.REPAINT)
-    if current_window == 0:
-        initial_settings_menu.show()
-        csv_showcase.hide()
-    else:
-        initial_settings_menu.hide()
-        csv_showcase.update_results(list_of_results(include_output=False, include_settings=False))
-        csv_showcase.show()
+        self.setLayout(main_layout)
+        self.set_current_window(0)
+
+    def _create_sidebar(self):
+        """Create the mode selection sidebar."""
+        sidebar = SideBar(" Mode Selection ", parent=self)
+        
+        buttons_config = [
+            (" Initial Settings ", True),
+            (" CSV View ", False),
+            (" Poly Functions ", False)
+        ]
+        
+        self.sidebar_buttons = []
+        for text, pressed in buttons_config:
+            button = SideBarButton(text, pressed=pressed, parent=sidebar)
+            sidebar.add_button(button)
+            self.sidebar_buttons.append(button)
+
+        self.sidebar_buttons[0].clicked.connect(lambda: self.set_current_window(0))
+        self.sidebar_buttons[1].clicked.connect(lambda: self.set_current_window(1))
+        self.sidebar_buttons[2].clicked.connect(lambda: self.set_current_window(2))
+        
+        return sidebar
+
+    def _populate_views(self):
+        """Load and initialize all UI widgets into the stacked widget."""
+        self.initial_settings_menu = InitialSettingsMenu()
+        self.csv_showcase = CSVGrid(
+            results=list_of_results(include_output=False, include_settings=False)
+        )
+        
+        # Placeholder for "Poly Functions"
+        poly_functions_placeholder = QWidget()
+        poly_functions_placeholder.setStyleSheet("background-color: #2c3e50;")
+
+        self.stacked_widget.addWidget(self.initial_settings_menu)
+        self.stacked_widget.addWidget(self.csv_showcase)
+        self.stacked_widget.addWidget(poly_functions_placeholder)
+
+    def set_current_window(self, index):
+        """Switch between different views in the main window."""
+        self.stacked_widget.setCurrentIndex(index)
+        
+        for i, button in enumerate(self.sidebar_buttons):
+            button.set_pressed(i == index)
+
+        if index == 1: # CSV View is selected
+            self.csv_showcase.update_results(list_of_results(include_output=False, include_settings=False))
+
+
+
+class App:
+    """Main application class."""
+
+    def __init__(self):
+        self.app = QApplication(sys.argv)
+        self.window = MainWindow()
+
+    def run(self):
+        """Show the main window and run the application."""
+        self.window.show()
+        sys.exit(self.app.exec())
 
 if __name__ == "__main__":
-    current_window = 0  
-
-    app = QApplication([])
-
-    window = MyWindow()
-    window.setStyleSheet(f"background-color: {cp.BACKGROUND_STYLES['main_window']['color']};")
-    window.resize(600, 400)
-
-    load_widgets(window)
-
-    window.show()
-    app.exec()
+    import threading
+    app = App()
+    app.run()

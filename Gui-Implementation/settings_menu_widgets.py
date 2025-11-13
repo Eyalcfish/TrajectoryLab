@@ -1,183 +1,108 @@
-from custom_widgets import EventMixin, State, fit_text_to_widget
-from PySide6.QtCore import Qt, QPoint, QPropertyAnimation, QEasingCurve, QTimer
-from PySide6.QtWidgets import QPushButton, QSizePolicy, QWidget, QLineEdit, QLabel
+from PySide6.QtWidgets import QPushButton, QWidget, QLineEdit, QLabel, QVBoxLayout, QHBoxLayout, QFrame
 from PySide6.QtGui import QDoubleValidator
+from PySide6.QtCore import Qt
+from custom_widgets import EventMixin, fit_text_to_widget
 import color_palette as cp
 
-class SettingWidget(EventMixin, QWidget):
-    CONTAINER = 0
-    LINEEDIT = 1
-    LABEL = 2
-    def __init__(self, default_value, setting_name = "Setting", parent = None, w = 0.5, h = 0.1, x_pos = 0, y_pos = 0):
+class SettingWidget(QWidget):
+    """Widget for a single setting with a label and line edit."""
+    def __init__(self, default_value, setting_name="Setting", parent=None):
         super().__init__(parent)
-        self.w = w
-        self.h = h
-        self.x_pos = x_pos
-        self.y_pos = y_pos
-
-        self.lineedit = QLineEdit(self)
+        
+        self.lineedit = QLineEdit()
         self.lineedit.setValidator(QDoubleValidator())
-        self.label = QLabel(setting_name, self)
-
-        self.default_value = default_value
-        self.setting_name = setting_name
+        self.lineedit.setPlaceholderText(str(default_value))
         
-        self.cupdate(State.DEFAULT)
- 
-    def cupdate(self, state: State):    
-        self.parent_w = self.parent().width()
-        self.parent_h = self.parent().height()
-        self.m = min(self.w*self.parent_w, self.h*self.parent_h)
-        if state == State.DEFAULT:
-            self.setAttribute(Qt.WA_StyledBackground, True)
-            self.lineedit.setPlaceholderText(str(self.default_value))
-            
-        if state == State.RESIZE or state == State.DEFAULT:
-
-            self.move(self.x_pos*self.parent_w, self.y_pos*self.parent_h)
-
-            self.setFixedSize(self.w * self.parent_w, self.h * self.parent_h)
-            self.setStyleSheet(self._stylesheet(self.CONTAINER))
-
-            fit_text_to_widget(self.lineedit, text=str(self.default_value), padding=0)
-            self.lineedit.setGeometry(0.55*self.w*self.parent_w, 0.15*self.h*self.parent_h, 0.41*self.w*self.parent_w, 0.75*self.h*self.parent_h)
-            self.lineedit.setStyleSheet(self._stylesheet(self.LINEEDIT))
-
-            fit_text_to_widget(self.label, text=str(self.setting_name), padding=0)
-            self.label.setGeometry(0, 0, 0.5*self.w*self.parent_w, self.h*self.parent_h)
-            self.label.setStyleSheet(self._stylesheet(self.LABEL))
+        self.label = QLabel(setting_name)
         
-    def _stylesheet(self, widget):
-        if widget == self.CONTAINER:
-            return f"""
-            background-color: {cp.CARD_SURFACE};
-            border-radius: {self.m*0.12}px;
-            """
-        elif widget == self.LINEEDIT:
-            return (f"""
+        layout = QHBoxLayout(self)
+        layout.addWidget(self.label)
+        layout.addWidget(self.lineedit)
+        self.setLayout(layout)
+        
+        self.setStyleSheet(self._stylesheet())
+
+    def _stylesheet(self):
+        return f"""
+            QLabel {{
+                color: {cp.SECONDARY_TEXT};
+                padding-right: 10px;
+            }}
             QLineEdit {{
                 background-color: {cp.CARD_SURFACE};
                 color: {cp.PRIMARY_TEXT};
-                border: None;
-                border-radius: 0px;
-                padding: {self.m*0.03}px;
-                border-bottom: {self.m*0.03}px solid {cp.BORDER_DIVIDER};
+                border: none;
+                border-bottom: 1px solid {cp.BORDER_DIVIDER};
+                padding: 4px;
             }}
             QLineEdit:focus {{
-                border-bottom: {self.m*0.03}px solid {cp.PRIMARY_BLUE};
+                border-bottom: 1px solid {cp.PRIMARY_BLUE};
             }}
-            """)
-        elif widget == self.LABEL:
-            return f"""
-            background-color: transparent;
-            border: none;
-            padding: 0px;
-            color: {cp.SECONDARY_TEXT};
-            """
-        
-class SettingWidgetContainer(EventMixin, QWidget):
-    LABEL = 0
-    def __init__(self, space = 0.25, category_name = "Category", parent = None, w = 0.5, h = 0.1, x = 0, y = 0):
+        """
+
+class SettingWidgetContainer(QFrame):
+    """Container for multiple SettingWidgets."""
+    def __init__(self, category_name="Category", parent=None):
         super().__init__(parent)
-        self.w = w
-        self.h = h
-        self.x_pos = x
-        self.y_pos = y
-        self.space = space
-
-        self.label = QLabel(category_name, self)
-
-        self.settings: list[SettingWidget] = []
-        self.category_name = category_name
+        self.setAttribute(Qt.WA_StyledBackground, True)
+        self.setFrameShape(QFrame.StyledPanel)
         
-        self.cupdate(State.DEFAULT)
+        self.layout = QVBoxLayout(self)
+        self.layout.setContentsMargins(10, 10, 10, 10)
+        self.layout.setSpacing(5)
+        
+        self.label = QLabel(category_name)
+        self.label.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(self.label)
+        
+        self.settings: list[SettingWidget] = []
+        self.setLayout(self.layout)
+        self.setStyleSheet(self._stylesheet())
 
     def add_setting(self, setting: SettingWidget):
         self.settings.append(setting)
-        setting.setParent(self)
-        self.cupdate(State.CHILD_ADDED)
+        self.layout.addWidget(setting)
 
-    def cupdate(self, state: State):
-        self.parent_w = self.parent().width()
-        self.parent_h = self.parent().height()
-        self.m = min(self.w*self.parent_w, self.h*self.parent_h)
-        if state == State.DEFAULT:
-            self.setAttribute(Qt.WA_StyledBackground, True)
-            
-        if state == State.RESIZE or state == State.DEFAULT or state == State.CHILD_ADDED:
+    def _stylesheet(self):
+        return f"""
+            QFrame {{
+                background-color: {cp.CARD_SURFACE};
+                border-radius: 5px;
+            }}
+            QLabel {{
+                color: {cp.PRIMARY_BLUE};
+                font-weight: bold;
+                padding-bottom: 5px;
+            }}
+        """
 
-            self.setGeometry(self.x_pos*self.parent_w, self.y_pos*self.parent_h, self.w * self.parent_w, self.h * self.parent_h)
-            self.setStyleSheet(self._stylesheet())
-
-            fit_text_to_widget(self.label, text=str(self.category_name), padding=0)
-            self.label.setGeometry(0.2*self.w*self.parent_w, 0, 0.6*self.w*self.parent_w, 0.3*self.h*self.parent_h)
-            self.label.setStyleSheet(self._stylesheet(self.LABEL))
-
-            if self.settings == []:
-                setting_height = 0.1
-            else:
-                setting_height = (0.65-self.space)/len(self.settings)
-
-            for i, setting in enumerate(self.settings):
-                setting.h = setting_height
-                setting.w = 0.93
-                setting.x_pos = 0.07
-                setting.y_pos = (0.35 + i*(self.space/len(self.settings) + setting_height))
-                setting.cupdate(State.RESIZE)
-
-    def _stylesheet(self, widget=None):
-        if widget is None:
-            return f"""
-            background-color: {cp.CARD_SURFACE};
-            border-radius: {self.m*0.05}px;
-            """
-        elif widget == self.LABEL:
-            return f"""
-            background-color: transparent;
-            border: none;
-            padding: 0px;
-            color: {cp.PRIMARY_BLUE}
-            """
-    
-class csvGenerateButton(EventMixin, QPushButton):
-    def __init__(self, text, parent = None, w = 0.2, h = 0.1, x_pos = 0.4, y_pos = 0.85):
+class CSVGenerateButton(QPushButton):
+    """Button to generate a CSV file, showing progress."""
+    def __init__(self, text, parent=None):
         super().__init__(text, parent)
-        self.w = w
-        self.h = h
-        self.x_pos = x_pos
-        self.y_pos = y_pos
-        self.prec = 0
         self.original_text = text
+        self.progress = 0
+        self.setStyleSheet(self._stylesheet())
+        self.setText(f"{self.original_text} (0.0%)")
 
-        self.cupdate(State.DEFAULT)
-
-    def cupdate(self, state: State):
-        self.parent_w = self.parent().width()
-        self.parent_h = self.parent().height()
-        self.m = min(self.w*self.parent_w, self.h*self.parent_h)
-        if state == State.DEFAULT:
-            self.setAttribute(Qt.WA_StyledBackground, True)
-            
-        if state == State.RESIZE or state == State.DEFAULT or state == State.REPAINT:
-
-            self.move(self.x_pos*self.parent_w, self.y_pos*self.parent_h)
-
-            self.setFixedSize(self.w * self.parent_w, self.h * self.parent_h)
-            self.setStyleSheet(self._stylesheet())
-
-            self.setText(f"{self.original_text} ({self.prec:.1%})")
-
-            fit_text_to_widget(self, text=str(self.text()), padding=self.m*0.05)
+    def set_progress(self, percentage):
+        """Update the button's text to show progress."""
+        self.progress = percentage
+        self.setText(f"{self.original_text} ({self.progress:.1%})")
+        # We need to re-apply the stylesheet for the gradient to update
+        self.setStyleSheet(self._stylesheet())
 
     def _stylesheet(self):
         style = cp.BUTTON_STYLES["success"]
+        
         return f"""
             QPushButton {{
                 background-color: {style["background"]};
                 border: none;
                 color: {style["text"]};
-                border-radius: {self.m*0.1}px;
-                padding: {self.m*0.05}px;
+                border-radius: 8px;
+                padding: 10px;
+                font-weight: bold;
             }}
             QPushButton:hover {{
                 background-color: {style["hover"]};
@@ -185,48 +110,25 @@ class csvGenerateButton(EventMixin, QPushButton):
             QPushButton:pressed {{
                 background-color: {style["pressed"]};
             }}
+            QPushButton:disabled {{
+                background-color: {style["background"]};
+            }}
         """
 
-class ProfileSelector(EventMixin, QLineEdit):
-    def __init__(self, parent = None, default_value = None, w = 0.3, h = 0.1, x_pos = 0.35, y_pos = 0.1):
+class ProfileSelector(QLineEdit):
+    """Line edit for profile selection."""
+    def __init__(self, default_value=None, parent=None):
         super().__init__(parent)
-        self.w = w
-        self.h = h
-        self.x_pos = x_pos
-        self.y_pos = y_pos
-        self.default_value = default_value
-
-        self.cupdate(State.DEFAULT)
-
-    def cupdate(self, state: State):
-        self.parent_w = self.parent().width()
-        self.parent_h = self.parent().height()
-        self.m = min(self.w*self.parent_w, self.h*self.parent_h)
-        if state == State.DEFAULT:
-            self.setAttribute(Qt.WA_StyledBackground, True)
-            if self.default_value is not None:
-                self.setPlaceholderText(str(self.default_value))
-            
-        if state == State.RESIZE or state == State.DEFAULT:
-
-            self.move(self.x_pos*self.parent_w, self.y_pos*self.parent_h)
-
-            self.setFixedSize(self.w * self.parent_w, self.h * self.parent_h)
-            self.setStyleSheet(self._stylesheet())
-
-            fit_text_to_widget(self, text=str(self.default_value), padding=self.m*0.03)
+        if default_value is not None:
+            self.setPlaceholderText(str(default_value))
+        self.setStyleSheet(self._stylesheet())
 
     def _stylesheet(self):
-        return (f"""
+        return f"""
             QLineEdit {{
-                background-color: {cp.CARD_SURFACE};
-                color: {cp.PRIMARY_TEXT};
-                border: None;
-                border-radius: {self.m*0.1}px;
-                padding: {self.m*0.03}px;
-                border-bottom: {self.m*0.03}px solid {cp.BORDER_DIVIDER};
+                background-color: {cp.CARD_SURFACE}; color: {cp.PRIMARY_TEXT};
+                border: none; border-radius: 8px; padding: 5px;
+                border-bottom: 1px solid {cp.BORDER_DIVIDER};
             }}
-            QLineEdit:focus {{
-                border-bottom: {self.m*0.03}px solid {cp.PRIMARY_BLUE};
-            }}
-            """)
+            QLineEdit:focus {{ border-bottom: 1px solid {cp.PRIMARY_BLUE}; }}
+        """
