@@ -12,6 +12,7 @@ PRIMARY_RED_PRESSED = "#A4262C"
 
 # ⚫ Neutrals / Background
 
+REALLY_DARK = "#1A1A1A"  # Very dark background
 BACKGROUND_DARK = "#1E1E1E" # Main background, slightly lighter than current
 CARD_SURFACE = "#252526"   # Card/panel background
 BORDER_DIVIDER = "#333337" # Borders and dividers, slightly softer
@@ -32,6 +33,11 @@ ERROR_LIGHT = "#E8484C"
 ERROR_DARK = "#A4262C"
 RED = ERROR # Alias for ERROR
 TRANSPARENT = "transparent"
+
+
+JSON_NUMBER_COLOR = "#B5CEA8"      # Light green (for numbers, 123)
+JSON_STRING_COLOR = "#CE9178"      # Rust/Orange (for "text in quotes")
+JSON_PUNCTUATION_COLOR = "#569CD6" # Light blue (for {, }, [, ], :, ,)
 
 # 🟡 Amber/Warning
 WARNING = "#CC9900" # Amber for warnings

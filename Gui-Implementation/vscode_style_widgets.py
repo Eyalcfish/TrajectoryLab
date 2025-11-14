@@ -17,12 +17,11 @@ class VSCodeSidebar(QWidget):
         self.setFixedWidth(220)  # VS Code-style narrow sidebar
         self.setStyleSheet(f"""
             QWidget {{
-                background-color: {cp.BACKGROUND_STYLES['sidebar']['color']};
+                background-color: {cp.REALLY_DARK};
                 color: {cp.PRIMARY_TEXT};
                 border-right: 1px solid {cp.BORDER_DIVIDER};
             }}
-        """
-)
+        """)
         # Main layout
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -47,56 +46,48 @@ class VSCodeSidebar(QWidget):
 
     def _create_logo_section(self):
         """Create the logo container at the top."""
-        container = QWidget()
-        container.setFixedHeight(80)
-        container.setStyleSheet(f"""
-            QWidget {{
-                background-color: {cp.BACKGROUND_STYLES['sidebar']['color']};
-                border-bottom: 1px solid {cp.BORDER_DIVIDER};
-            }}
-        """)
-
-        layout = QVBoxLayout(container)
-        layout.setContentsMargins(16, 16, 16, 16)
-        layout.setAlignment(Qt.AlignCenter)
-
-        # Compact, elegant logo
-        logo_label = QLabel("TrajectoryLab")
-        logo_label.setAlignment(Qt.AlignCenter)
-        logo_label.setStyleSheet(f"""
-            QLabel {{
+        button = QPushButton("﹀ Explorer")
+        button.setMinimumHeight(34)
+        button.setCheckable(True)
+        button.setChecked(True)  # Start expanded
+        button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {cp.REALLY_DARK};
+                color: {cp.SECONDARY_TEXT};
+                text-align: left;
+                padding: 6px 3px;
+                border: none;
                 font-size: 13px;
-                font-weight: 600;
-                color: {cp.PRIMARY_BLUE};
-                background-color: {cp.CARD_SURFACE};
-                border-radius: 6px;
-                padding: 12px 16px;
-                border: 1px solid {cp.BORDER_DIVIDER};
+                border-right: 1px solid {cp.BORDER_DIVIDER};
+            }}
+            QPushButton:hover {{
+                color: {cp.PRIMARY_TEXT};
+                background-color: rgba(255, 255, 255, 0.05);
+            }}
+            QPushButton:checked {{
+                color: {cp.PRIMARY_TEXT};
             }}
         """)
 
-        layout.addWidget(logo_label)
-        return container
+        return button
 
     def _create_settings_button(self):
         """Create the Settings File button."""
-        button = QPushButton("⚙ settings.json")
+        button = QPushButton("⚙ Settings")
         button.setCursor(Qt.PointingHandCursor)
         button.setStyleSheet(f"""
             QPushButton {{
-                background-color: {cp.CARD_SURFACE};
-                color: {cp.SECONDARY_TEXT};
+                background-color: {cp.REALLY_DARK};
+                color: {cp.JSON_STRING_COLOR};
                 text-align: left;
                 padding: 6px 16px;
                 border: none;
-                font-size: 11px;
+                font-size: 13px;
                 font-weight: 600;
-                text-transform: uppercase;
                 letter-spacing: 0.5px;
                 border-right: 1px solid {cp.BORDER_DIVIDER}; 
             }}
             QPushButton:hover {{
-                color: {cp.PRIMARY_TEXT};
                 background-color: {cp.BORDER_DIVIDER};
             }}
             QPushButton:checked {{
@@ -115,28 +106,22 @@ class VSCodeSidebar(QWidget):
         layout.setSpacing(0)
 
         # CSV header (collapsible toggle)
-        self.csv_header = QPushButton("▼ CSVs")
+        self.csv_header = QPushButton("﹀ CSVs")
         self.csv_header.setCursor(Qt.PointingHandCursor)
         self.csv_header.setCheckable(True)
         self.csv_header.setChecked(True)  # Start expanded
         self.csv_header.setStyleSheet(f"""
             QPushButton {{
-                background-color: {cp.CARD_SURFACE};
-                color: {cp.SECONDARY_TEXT};
+                background-color: {cp.REALLY_DARK};
+                color: {cp.JSON_NUMBER_COLOR};
                 text-align: left;
                 padding: 6px 16px;
                 border: none;
-                font-size: 11px;
-                font-weight: 600;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                border: 1px solid {cp.BORDER_DIVIDER};
+                font-size: 13px;
+                border-right: 1px solid {cp.BORDER_DIVIDER};
             }}
             QPushButton:hover {{
-                color: {cp.PRIMARY_TEXT};
-            }}
-            QPushButton:checked {{
-                color: {cp.PRIMARY_TEXT};
+                background-color: rgba(255, 255, 255, 0.05);
             }}
         """)
         self.csv_header.toggled.connect(self._toggle_csv_content)
@@ -178,22 +163,32 @@ class VSCodeSidebar(QWidget):
                 button.setCursor(Qt.PointingHandCursor)
                 button.setStyleSheet(f"""
                     QPushButton {{
-                        color: {cp.SECONDARY_TEXT};
+                        color: {cp.JSON_NUMBER_COLOR};
                         background-color: transparent;
-                        border: none;
-                        padding: 6px 0px 6px 20px; /* Indented padding */
                         text-align: left;
                         font-size: 13px;
-                        border-right: 1px solid {cp.BORDER_DIVIDER};
+
+                        /* 1. The "x pixels" gap from the left wall */
+                        margin-left: 20px;  /* Example: 10px gap */
+
+                        /* 2. Your left border */
                         border-left: 1px solid {cp.BORDER_DIVIDER};
-                        border-bottom: 1px solid {cp.BORDER_DIVIDER};
+                        
+                        /* 3. Padding between the border and the text */
+                        padding-top: 6px;
+                        padding-bottom: 6px;
+                        padding-left: 20px; /* Your original 20px indent */
+
+                        /* Make other borders transparent so they don't show */
+                        border-top: none;
+                        border-right: none;
+                        border-bottom: none;
                     }}
                     QPushButton:hover {{
                         background-color: rgba(255, 255, 255, 0.05);
                         color: {cp.PRIMARY_TEXT};
                     }}
                 """)
-
                 button.clicked.connect(lambda checked, num=profile_num: self.csv_clicked.emit(num))
                 
                 csv_content_layout.addWidget(button)
@@ -293,9 +288,9 @@ class VSCodeSidebar(QWidget):
         self.csv_content.setVisible(checked)
         # Update arrow direction
         if checked:
-            self.csv_header.setText("▼ CSVs")
+            self.csv_header.setText("﹀ CSVs")
         else:
-            self.csv_header.setText("▶ CSVs")
+            self.csv_header.setText("> CSVs")
 
 
 class TabBar(QWidget):
@@ -307,7 +302,7 @@ class TabBar(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setAttribute(Qt.WA_StyledBackground, True)
-        self.setFixedHeight(26)  # VS Code tab bar height
+        self.setFixedHeight(34)  # VS Code tab bar height
         self.setStyleSheet(f"""
             QWidget {{
                 background-color: {cp.BACKGROUND_DARK};
@@ -400,7 +395,7 @@ class Tab(QWidget):
         self.is_active = False
 
         self.setAttribute(Qt.WA_StyledBackground, True)
-        self.setFixedHeight(26)
+        self.setFixedHeight(34)
         self.setMinimumWidth(100)
         self.setMaximumWidth(180)
 

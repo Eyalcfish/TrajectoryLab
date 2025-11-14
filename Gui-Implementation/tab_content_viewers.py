@@ -6,10 +6,92 @@ from pathlib import Path
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QTextEdit, QLabel,
                                QTableWidget, QTableWidgetItem, QHeaderView,
                                QAbstractScrollArea, QFrame, QScrollArea, QHBoxLayout, QPushButton, QPlainTextEdit, QTextEdit, QMessageBox)
-from PySide6.QtCore import Qt, QSize, Signal
-from PySide6.QtGui import QFont, QPainter, QColor, QTextCursor
+from PySide6.QtGui import QFont, QPainter, QColor, QTextCursor, QSyntaxHighlighter, QTextCharFormat,QTextFormat, QPen
+from PySide6.QtCore import Qt, QSize, Signal, QRegularExpression
 import color_palette as cp
 
+class LineBorderEditor(QPlainTextEdit):
+    """
+    A custom QPlainTextEdit that paints a top and bottom
+    border on the current line.
+    """
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        
+        # We need this to store the line color
+        self.line_border_color = QColor(cp.BORDER_DIVIDER).lighter(100)
+
+        # Connect the signal to force a repaint when the cursor moves
+        self.cursorPositionChanged.connect(self.force_repaint)
+
+    def force_repaint(self):
+        """
+        This slot just tells the widget to repaint itself.
+        """
+        self.viewport().update()
+
+    def paintEvent(self, event):
+        """
+        This is where we manually paint the lines.
+        """
+        # 1. First, let the editor draw itself normally
+        super().paintEvent(event)
+
+        # 2. Now, we paint on top
+        painter = QPainter(self.viewport())
+        
+        # 3. Set our pen
+        pen = QPen(self.line_border_color)
+        pen.setWidth(1) # 1px border
+        painter.setPen(pen)
+
+        # 4. Find the current line's geometry
+        cursor = self.textCursor()
+        block = cursor.block()
+        geom = self.blockBoundingGeometry(block)
+        
+        # Get the top and bottom positions, adjusted for scrolling
+        top = geom.translated(self.contentOffset()).top()
+        bottom = geom.translated(self.contentOffset()).bottom()
+
+        # Get the full width of the editor's viewport
+        full_width = self.viewport().rect().width()
+
+        # 5. Draw the lines
+        # Draw top line
+        painter.drawLine(0, int(top), full_width, int(top))
+        
+        # Draw bottom line
+        painter.drawLine(0, int(bottom), full_width, int(bottom))
+
+class MySyntaxHighlighter(QSyntaxHighlighter):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.rules = []
+
+        number_format = QTextCharFormat()
+        number_format.setForeground(QColor(cp.JSON_NUMBER_COLOR)) 
+        number_rule = QRegularExpression(r"\b[0-9]+(?:\.[0-9]+)?\b")
+        self.rules.append((number_rule, number_format))
+
+        sign_format = QTextCharFormat()
+        sign_format.setForeground(QColor(cp.JSON_PUNCTUATION_COLOR)) 
+        sign_rule = QRegularExpression(r"[^\w\s]")
+        self.rules.append((sign_rule, sign_format))
+
+    def highlightBlock(self, text):
+        """Called by Qt to apply highlighting to a block of text."""
+        
+        for pattern, format in self.rules:
+            iterator = pattern.globalMatch(text)
+            while iterator.hasNext():
+                match = iterator.next()
+                self.setFormat(
+                    match.capturedStart(),
+                    match.capturedLength(),
+                    format
+                )
 
 class LineNumberArea(QWidget):
     def __init__(self, settings_viewer):
@@ -35,17 +117,18 @@ class SettingsFileViewer(QWidget):
                 background-color: {cp.BACKGROUND_DARK};
             }}
         """)
-
+    
         layout = QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        self.editor = QPlainTextEdit()
+        self.editor = LineBorderEditor()
         self.editor.setFont(QFont("Consolas", 11))
+        self.highlighter = MySyntaxHighlighter(self.editor.document())
         self.editor.setStyleSheet(f"""
             QPlainTextEdit {{
                 background-color: {cp.BACKGROUND_DARK};
-                color: {cp.PRIMARY_TEXT};
+                color: {cp.JSON_STRING_COLOR};
                 border: none;
                 padding: 16px 20px;
                 font-family: "Consolas", "Courier New", monospace;
@@ -69,6 +152,14 @@ class SettingsFileViewer(QWidget):
             }}
         """)
 
+        # File path label
+        self.path_label = QLabel("No file loaded")
+        self.path_label.setStyleSheet(f"""
+            color: {cp.SECONDARY_TEXT};
+            font-size: 14px;
+            font-family: "Segoe UI", "Roboto", sans-serif;
+            border: none;
+        """)
         self.lineNumberArea = LineNumberArea(self)
 
         layout.addWidget(self.lineNumberArea)
@@ -76,14 +167,14 @@ class SettingsFileViewer(QWidget):
 
         self.editor.blockCountChanged.connect(self.updateLineNumberAreaWidth)
         self.editor.updateRequest.connect(self.updateLineNumberArea)
-        self.editor.cursorPositionChanged.connect(self.highlightCurrentLine)
 
         self.updateLineNumberAreaWidth(0)
-        self.highlightCurrentLine()
+        # self.highlightCurrentLine()
 
         main_layout = QVBoxLayout()
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
+        main_layout.addWidget(self.path_label)
         main_layout.addLayout(layout)
 
         # Bottom bar for save button and file path
@@ -125,7 +216,7 @@ class SettingsFileViewer(QWidget):
             if block.isVisible() and bottom >= event.rect().top():
                 number = str(blockNumber + 1)
                 painter.setPen(QColor(cp.SECONDARY_TEXT))
-                painter.drawText(0, int(top), self.lineNumberArea.width(), self.fontMetrics().height(),
+                painter.drawText(0, int(top)+self.fontMetrics().height(), self.lineNumberArea.width(), self.fontMetrics().height(),
                                  Qt.AlignRight, number)
 
             block = block.next()
@@ -133,20 +224,33 @@ class SettingsFileViewer(QWidget):
             bottom = top + self.editor.blockBoundingRect(block).height()
             blockNumber += 1
 
+
     def highlightCurrentLine(self):
         extraSelections = []
         if not self.editor.isReadOnly():
             selection = QTextEdit.ExtraSelection()
-            lineColor = QColor(cp.BORDER_DIVIDER).lighter(160)
-            selection.format.setBackground(lineColor)
-            
-            cursor = self.editor.textCursor()
-            cursor.movePosition(QTextCursor.StartOfLine)
-            cursor.movePosition(QTextCursor.EndOfLine, QTextCursor.KeepAnchor)
-            selection.cursor = cursor
-            extraSelections.append(selection)
-        self.editor.setExtraSelections(extraSelections)
 
+            # 1. Get the color (using your original logic)
+            lineColor = QColor(cp.BORDER_DIVIDER).lighter(160)
+
+            # 2. Set the BOTTOM border (as an underline)
+            selection.format.setFontUnderline(True)
+            selection.format.setUnderlineColor(lineColor)
+
+            # 3. Set the TOP border (as an overline)
+            # ! WARNING: This will use the main text color, NOT your lineColor.
+            selection.format.setFontOverline(True)
+            
+            # 4. Tell the selection to span the full width of the line
+            selection.format.setProperty(QTextFormat.FullWidthSelection, True)
+
+            # 5. Set the cursor and add to the list
+            selection.cursor = self.editor.textCursor()
+            selection.cursor.clearSelection() # Don't interfere with user's text selection
+            extraSelections.append(selection)
+        
+        # 6. Apply the new "highlights"
+        self.editor.setExtraSelections(extraSelections)
     def _create_bottom_bar(self):
         """Create the bottom bar with save button and file path."""
         container = QWidget()
@@ -160,14 +264,6 @@ class SettingsFileViewer(QWidget):
         layout.setContentsMargins(12, 0, 12, 0)
         layout.setSpacing(12)
 
-        # File path label
-        self.path_label = QLabel("No file loaded")
-        self.path_label.setStyleSheet(f"""
-            color: {cp.SECONDARY_TEXT};
-            font-size: 11px;
-            font-family: "Segoe UI", "Roboto", sans-serif;
-            border: none;
-        """)
         layout.addWidget(self.path_label)
 
         layout.addStretch()
@@ -301,13 +397,14 @@ class CSVFileViewer(QWidget):
 
         # Table widget
         self.table = QTableWidget()
+        self.table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.table.setSelectionMode(QTableWidget.SingleSelection)
         self.table.setStyleSheet(f"""
             QTableWidget {{
                 background-color: {cp.BACKGROUND_DARK};
                 color: {cp.PRIMARY_TEXT};
                 gridline-color: {cp.BORDER_DIVIDER};
-                selection-background-color: {cp.PRIMARY_BLUE};
-                selection-color: {cp.PRIMARY_TEXT};
+                selection-background-color: {cp.PRIMARY_RED};
                 border: none;
                 font-family: "Consolas", "Courier New", monospace;
                 font-size: 12px;
@@ -450,6 +547,7 @@ class CSVFileViewer(QWidget):
                 for r, row in enumerate(rows):
                     for c, val in enumerate(row):
                         item = QTableWidgetItem(val)
+                        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                         self.table.setItem(r, c, item)
 
                 # Adjust column widths
