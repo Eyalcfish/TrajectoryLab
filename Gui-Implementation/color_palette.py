@@ -1,37 +1,43 @@
-# 🎨 Core Colors
+# 🎨 Core Colors (Visual Studio Dark Theme inspired)
 
-PRIMARY_BLUE = "#3B82F6" # strong, modern blue (like Tailwind’s)
-PRIMARY_LIGHT = "#60A5FA" # hover/highlight version
-PRIMARY_DARK = "#1E40AF" # pressed or dark-theme accent
+PRIMARY_BLUE = "#007ACC"  # Visual Studio's signature blue
+PRIMARY_LIGHT = "#008ACC" # Slightly lighter for hover
+PRIMARY_DARK = "#005C99"  # Darker for pressed or accents
+PRIMARY_BLUE_HOVER = "#008CFF"
+PRIMARY_BLUE_PRESSED = "#006BB3"
+
+PRIMARY_RED = "#D13438"
+PRIMARY_RED_HOVER = "#E8484C"
+PRIMARY_RED_PRESSED = "#A4262C"
 
 # ⚫ Neutrals / Background
 
-BACKGROUND_DARK = "#0D0D0D" # near-black, not pure (#000) to avoid harsh contrast
-CARD_SURFACE = "#1A1A1A" # slightly lighter for UI separation
-BORDER_DIVIDER = "#2C2C2C" # border / divider color
+BACKGROUND_DARK = "#1E1E1E" # Main background, slightly lighter than current
+CARD_SURFACE = "#252526"   # Card/panel background
+BORDER_DIVIDER = "#333337" # Borders and dividers, slightly softer
 
 # ⚪ Text & Highlights
 
-PRIMARY_TEXT = "#FFFFFF" # pure white for clarity
-SECONDARY_TEXT = "#B0B0B0" # muted gray for lower emphasis
-ACCENT_WHITE = "#E6F0FF" # softer white that blends well with blue
+PRIMARY_TEXT = "#F0F0F0" # Near-white for main text
+SECONDARY_TEXT = "#AAAAAA" # Muted gray for secondary text
+ACCENT_WHITE = "#FFFFFF" # Pure white for strong highlights
 
 # 🔵 Optional Accent Shades
 
-INFO_HIGHLIGHT = "#38BDF8" # light cyan tint for hover effects
-SUCCESS = "#22C55E" # green that fits blue contrast
-SUCCESS_LIGHT = "#32D56E" # lighter green for hover
-ERROR = "#EF4444" # bright red for alerts
-ERROR_LIGHT = "#FF6B6B"
-ERROR_DARK = "#D92A2A"
+INFO_HIGHLIGHT = "#007ACC" # Using primary blue for info highlights
+SUCCESS = "#388A34" # Green for success, adjusted for VS theme
+SUCCESS_LIGHT = "#4CAF50"
+ERROR = "#D13438" # Red for errors, adjusted for VS theme
+ERROR_LIGHT = "#E8484C"
+ERROR_DARK = "#A4262C"
 RED = ERROR # Alias for ERROR
 TRANSPARENT = "transparent"
 
 # 🟡 Amber/Warning
-WARNING = "#FBBF24" # for non-critical alerts
+WARNING = "#CC9900" # Amber for warnings
 
 # 🟣 Purple/Accent 2
-ACCENT_2 = "#8B5CF6" # a secondary accent color
+ACCENT_2 = "#6441A4" # A secondary accent color
 
 
 # === UI Element Style Definitions ===
@@ -48,7 +54,7 @@ BUTTON_STYLES = {
     "secondary": {
         "background": CARD_SURFACE,
         "text": PRIMARY_TEXT,
-        "hover": BORDER_DIVIDER,
+        "hover": BORDER_DIVIDER, # Use border color for hover background
         "pressed": BACKGROUND_DARK,
         "border": BORDER_DIVIDER,
     },
@@ -78,6 +84,6 @@ BACKGROUND_STYLES = {
         "border": BORDER_DIVIDER,
     },
     "sidebar": {
-        "color": "#1F1F1F", # slightly different from card
+        "color": "#252526", # Same as CARD_SURFACE for consistency with VS
     }
 }

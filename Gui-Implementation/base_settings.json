@@ -1,0 +1,16 @@
+{
+    "maxangle": 45.0,
+    "minangle": 20.0,
+    "angledelta": 5.0,
+    "maxshooterspeed": 20.0,
+    "minshooterspeed": 15.0,
+    "shooterspeeddelta": 2.5,
+    "targetheight": 2.5,
+    "targetradius": 0.5,
+    "distancetolerance": 0.1,
+    "maxdistance": 50.0,
+    "mindistance": 35.0,
+    "distancedelta": 5.0,
+    "maxrobotspeed": 3.0,
+    "minrobotspeed": 0.5
+}
